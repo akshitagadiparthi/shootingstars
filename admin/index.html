@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin · Shooting Stars Media</title>
+<link rel="icon" href="../assets/brand/icon-monogram.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/css/site.css">
+<style>
+  body { font-size: 16px; }
+  .adm-top { position: sticky; top: 0; z-index: 20; background: rgba(0,0,0,.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+  .adm-top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 68px; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 26px 0; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  .tile { padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+  .tile b { display: block; font-size: 36px; font-style: italic; line-height: 1.1; }
+  .tile span { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .tile.alert b { color: #ffb4b4; }
+  .tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; font-style: normal; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
+  th { position: sticky; top: 0; background: var(--surface-2); font-weight: 600; color: var(--silver-2); }
+  tbody tr { cursor: pointer; } tbody tr:hover { background: var(--surface-2); }
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12.5px; border: 1px solid var(--line-2); }
+  .pill.super { background: #3a1414; border-color: #8a4b4b; } .pill.priority { background: #332a10; border-color: #7f6c35; } .pill.late { color: #ffb4b4; border-color: #8a4b4b; }
+  .tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+  .tools .input { width: auto; min-width: 220px; min-height: 42px; }
+  dialog { background: var(--surface-2); color: var(--text); border: 1px solid var(--line-2); border-radius: 20px; padding: 0; width: min(720px, 94vw); }
+  dialog::backdrop { background: rgba(0,0,0,.75); }
+  .dlg { padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+  .kv { display: grid; grid-template-columns: 180px 1fr; gap: 8px 16px; font-style: normal; font-size: 15px; }
+  .kv dt { color: var(--muted); } .kv dd { margin: 0; white-space: pre-wrap; word-break: break-word; }
+  .item { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+  .item + .item { margin-top: 8px; }
+  .item small { color: var(--muted); }
+  .toggle { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; font-style: normal; }
+  .toggle input { width: 18px; height: 18px; accent-color: #dde1e7; }
+</style>
+</head>
+<body>
+<header class="adm-top"><div class="wrap">
+  <a class="brand" href="../index.html"><img src="../assets/brand/logo-horizontal-white.svg" alt="Shooting Stars" style="height:24px;width:auto"><span class="brand-media">ADMIN</span></a>
+  <div class="row"><a class="btn btn-ghost btn-sm" id="sheet-link" href="#" target="_blank" rel="noopener" hidden>Open Google Sheet ↗</a><button class="btn btn-ghost btn-sm" id="logout" type="button" hidden>Sign out</button></div>
+</div></header>
+
+<main class="wrap" id="main" style="padding-bottom:80px">
+  <section id="login" class="section-tight" style="max-width:520px">
+    <span class="eyebrow">Admin studio</span>
+    <h1 class="h1 mt-s">Sign in</h1>
+    <p class="muted mt-s">Use the admin key shown in the Google Sheet (menu Shooting Stars › Show admin key).</p>
+    <form class="form mt-m" id="login-form">
+      <label class="field"><span>Admin key</span><input type="password" name="key" required autocomplete="current-password"></label>
+      <label class="check"><input type="checkbox" name="remember"><span>Remember on this device</span></label>
+      <button class="btn btn-primary" type="submit" style="align-self:flex-start">Sign in</button>
+      <div class="status err" id="login-err" hidden></div>
+    </form>
+  </section>
+
+  <section id="app" hidden>
+    <div class="tabs" role="tablist">
+      <button class="chip" data-tab="overview" aria-selected="true" role="tab">Overview</button>
+      <button class="chip" data-tab="Enquiries" role="tab">Enquiries</button>
+      <button class="chip" data-tab="Careers" role="tab">Job applications</button>
+      <button class="chip" data-tab="Freelance" role="tab">Freelance network</button>
+      <button class="chip" data-tab="Reels" role="tab">Reels</button>
+      <button class="chip" data-tab="Jobs" role="tab">Job openings</button>
+      <button class="chip" data-tab="settings" role="tab">Settings</button>
+    </div>
+    <div id="view" aria-live="polite"></div>
+  </section>
+</main>
+
+<dialog id="dlg"><div class="dlg" id="dlg-body"></div></dialog>
+
+<script src="../assets/js/config.js"></script>
+<script>
+(function () {
+  const API = (window.SS_CONFIG || {}).API_URL;
+  const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const view = $('#view');
+  const CATS = ['featured', 'weddings', 'sports', 'store', 'brand', 'automotive', 'movies', 'photography', 'celebrations', 'realestate', 'corporate'];
+  const CHAPTERS = ['Engagement', 'Bride to be', 'Pasupu', 'Haldi', 'Mehendi', 'Sangeeth', 'Pellikoduku'];
+  let key = '';
+  try { key = sessionStorage.getItem('ss_admin') || localStorage.getItem('ss_admin') || ''; } catch (e) { /* ignore */ }
+
+  async function call(op, extra) {
+    if (!API) throw new Error('The website is not connected to the Google Sheet yet. Add API_URL in assets/js/config.js.');
+    const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ action: 'admin', key, op }, extra || {})) });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'Something went wrong');
+    return j;
+  }
+  const loading = () => { view.innerHTML = '<p class="muted">Loading…</p>'; };
+  const fail = (e) => { view.innerHTML = `<div class="status err">${esc(e.message)}</div>`; if (/admin key/i.test(e.message)) signOut(); };
+
+  /* ---------- sign in ---------- */
+  $('#login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    key = e.target.key.value.trim();
+    const err = $('#login-err');
+    err.hidden = true;
+    try {
+      await call('overview');
+      try { (e.target.remember.checked ? localStorage : sessionStorage).setItem('ss_admin', key); } catch (x) { /* ignore */ }
+      start();
+    } catch (x) { err.textContent = x.message; err.hidden = false; }
+  });
+  function signOut() {
+    try { sessionStorage.removeItem('ss_admin'); localStorage.removeItem('ss_admin'); } catch (e) { /* ignore */ }
+    key = ''; $('#app').hidden = true; $('#login').hidden = false; $('#logout').hidden = true; $('#sheet-link').hidden = true;
+  }
+  $('#logout').addEventListener('click', signOut);
+  function start() { $('#login').hidden = true; $('#app').hidden = false; $('#logout').hidden = false; show('overview'); }
+
+  $$('[data-tab]').forEach((b) => b.addEventListener('click', () => show(b.dataset.tab)));
+  function show(tab) {
+    $$('[data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+    if (tab === 'overview') return overview();
+    if (tab === 'settings') return settings();
+    if (tab === 'Reels') return reels();
+    if (tab === 'Jobs') return jobs();
+    return records(tab);
+  }
+
+  /* ---------- overview ---------- */
+  async function overview() {
+    loading();
+    try {
+      const j = await call('overview');
+      const c = j.counts;
+      const sl = $('#sheet-link'); sl.href = j.sheetUrl; sl.hidden = false;
+      const src = Object.entries(j.bySource || {}).sort((a, b) => b[1] - a[1]);
+      view.innerHTML = `
+        <div class="tiles">
+          <div class="tile"><b>${c.today}</b><span>Enquiries today</span></div>
+          <div class="tile"><b>${c.open}</b><span>Awaiting first contact</span></div>
+          <div class="tile ${c.overdue ? 'alert' : ''}"><b>${c.overdue}</b><span>Past callback deadline</span></div>
+          <div class="tile ${c.superUrgent ? 'alert' : ''}"><b>${c.superUrgent}</b><span>Super Urgent shoots</span></div>
+          <div class="tile"><b>${c.labs}</b><span>Labs proposals</span></div>
+          <div class="tile"><b>${c.films}</b><span>Films enquiries</span></div>
+          <div class="tile"><b>${c.careers}</b><span>Job applications</span></div>
+          <div class="tile"><b>${c.freelance}</b><span>Freelance registrations</span></div>
+        </div>
+        <h2 class="h3 mt-l">Needs attention</h2>
+        ${j.attention.length ? `<div class="tbl-wrap mt-s"><table><thead><tr><th>Ref</th><th>Division</th><th>Name</th><th>Phone</th><th>Priority</th><th>Respond by</th><th>Shoot</th></tr></thead><tbody>${j.attention.map((r) => `<tr><td>${esc(r.ref)}</td><td>${esc(r.division)}</td><td>${esc(r.name)}</td><td><a href="tel:${esc(String(r.phone).replace(/[^\d+]/g, ''))}">${esc(r.phone)}</a></td><td>${r.priority ? `<span class="pill ${r.priority === 'Super Urgent' ? 'super' : 'priority'}">${esc(r.priority)}</span>` : ''}</td><td>${r.overdue ? '<span class="pill late">Overdue</span> ' : ''}${esc(r.respondBy)}</td><td>${esc([r.shoot, r.date].filter(Boolean).join(' · '))}</td></tr>`).join('')}</tbody></table></div>` : '<p class="muted mt-s">Nothing urgent. Every new enquiry is within its callback time.</p>'}
+        <h2 class="h3 mt-l">Where enquiries come from</h2>
+        <div class="row mt-s">${src.length ? src.map(([k, v]) => `<span class="tag">${esc(k)} · ${v}</span>`).join('') : '<span class="muted">No enquiries yet.</span>'}</div>
+        <p class="note mt-l">Instagram auto-feed: ${j.instagramConnected ? 'connected' : 'not connected (optional — see README)'}. Callbacks are tracked with the Status column in the Sheet.</p>`;
+    } catch (e) { fail(e); }
+  }
+
+  /* ---------- records: enquiries, careers, freelance ---------- */
+  async function records(sheet) {
+    loading();
+    try {
+      const j = await call('list', { sheet, limit: 2000 });
+      const h = j.headers;
+      const show = sheet === 'Enquiries' ? ['Ref', 'Received (IST)', 'Division', 'Status', 'Films priority', 'Respond by (IST)', 'Name', 'Phone', 'Shoot type', 'Shoot date', 'Business', 'Source']
+        : sheet === 'Careers' ? ['Ref', 'Received (IST)', 'Status', 'Name', 'Email', 'Role', 'City', 'CV link']
+          : ['Ref', 'Received (IST)', 'Status', 'Name', 'Phone', 'City', 'Skills', 'Availability'];
+      const idx = show.map((s) => h.indexOf(s)).filter((i) => i >= 0);
+      view.innerHTML = `
+        <div class="tools">
+          <input class="input" type="search" placeholder="Search name, phone, ref…" aria-label="Search">
+          ${sheet === 'Enquiries' ? '<select class="input" data-div aria-label="Division"><option value="">All divisions</option><option>Marketing Labs</option><option>Films</option></select>' : ''}
+          <button class="btn btn-ghost btn-sm" data-csv type="button">Download CSV</button>
+          <span class="muted small" data-count></span>
+        </div>
+        <div class="tbl-wrap"><table><thead><tr>${idx.map((i) => `<th>${esc(h[i])}</th>`).join('')}</tr></thead><tbody></tbody></table></div>`;
+      const tbody = $('tbody', view), q = $('input[type=search]', view), dv = $('[data-div]', view);
+      let rows = j.rows;
+      const now = new Date();
+      function filtered() {
+        const s = q.value.trim().toLowerCase();
+        return rows.filter((r) => (!s || r.cells.join(' ').toLowerCase().includes(s)) && (!dv || !dv.value || r.cells[h.indexOf('Division')] === dv.value));
+      }
+      function draw() {
+        const list = filtered();
+        $('[data-count]', view).textContent = `${list.length} of ${j.total}`;
+        tbody.innerHTML = list.map((r, k) => `<tr data-k="${rows.indexOf(r)}">${idx.map((i) => {
+          let v = r.cells[i]; const name = h[i];
+          if (name === 'Films priority' && v) v = `<span class="pill ${v === 'Super Urgent' ? 'super' : v === 'Priority' ? 'priority' : ''}">${esc(v)}</span>`;
+          else if (name === 'Respond by (IST)' && v && r.cells[h.indexOf('Status')] === 'New' && new Date(String(v).replace(' ', 'T') + ':00+05:30') < now) v = `<span class="pill late">${esc(v)}</span>`;
+          else v = esc(v);
+          return `<td>${v}</td>`;
+        }).join('')}</tr>`).join('') || `<tr><td colspan="${idx.length}" class="muted">No records yet.</td></tr>`;
+      }
+      q.addEventListener('input', draw);
+      if (dv) dv.addEventListener('change', draw);
+      tbody.addEventListener('click', (e) => {
+        const tr = e.target.closest('tr[data-k]'); if (!tr || e.target.closest('a')) return;
+        const r = rows[+tr.dataset.k];
+        dialog(`<div class="split"><h2 class="h3">${esc(r.cells[0])}</h2><button class="btn btn-ghost btn-sm" data-close type="button">Close</button></div>
+          <dl class="kv">${h.map((name, i) => r.cells[i] !== '' ? `<dt>${esc(name)}</dt><dd>${/^https?:\/\//.test(String(r.cells[i])) ? String(r.cells[i]).split('\n').map((u) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u)}</a>`).join('<br>') : esc(r.cells[i])}</dd>` : '').join('')}</dl>
+          <p class="note">To change the status, edit the Status column in the Sheet.</p>`);
+      });
+      $('[data-csv]', view).addEventListener('click', () => {
+        const list = filtered();
+        const csv = [h].concat(list.map((r) => r.cells)).map((row) => row.map((v) => {
+          let s = String(v == null ? '' : v);
+          if (/^[=+\-@]/.test(s)) s = "'" + s;
+          return '"' + s.replace(/"/g, '""') + '"';
+        }).join(',')).join('\r\n');
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' }));
+        a.download = `shooting-stars-${sheet.toLowerCase()}-${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.append(a); a.click(); a.remove();
+      });
+      draw();
+    } catch (e) { fail(e); }
+  }
+
+  /* ---------- reels ---------- */
+  async function reels() {
+    loading();
+    try {
+      const j = await call('list', { sheet: 'Reels' });
+      const h = j.headers;
+      const get = (r, n) => r.cells[h.indexOf(n)];
+      const yes = (v) => v === true || String(v).toUpperCase() === 'TRUE';
+      view.innerHTML = `
+        <div class="card stack">
+          <h2 class="h3">Add a reel</h2>
+          <p class="muted small">Paste any Instagram reel or post link. It appears on the website within a minute.</p>
+          <form class="form" id="reel-add">
+            <label class="field"><span>Instagram link *</span><input type="url" name="link" required placeholder="https://www.instagram.com/reel/…"></label>
+            <div class="two">
+              <label class="field"><span>Category *</span><select name="cat" required>${CATS.map((c) => `<option>${c}</option>`).join('')}</select></label>
+              <label class="field"><span>Title</span><input type="text" name="title" maxlength="80" placeholder="e.g. Haldi, Store launch"></label>
+            </div>
+            <div class="two">
+              <label class="field"><span>Wedding chapter (for the constellation)</span><select name="chapter"><option value="">—</option>${CHAPTERS.map((c) => `<option>${c}</option>`).join('')}</select></label>
+              <label class="field"><span>Poster image URL (optional)</span><input type="url" name="poster" placeholder="https://"></label>
+            </div>
+            <label class="check"><input type="checkbox" name="featured"><span>Featured (home page and rails)</span></label>
+            <button class="btn btn-primary" type="submit" style="align-self:flex-start">Add reel</button>
+          </form>
+        </div>
+        <h2 class="h3 mt-l">On the website (${j.rows.length})</h2>
+        <div class="mt-s" id="reel-list"></div>`;
+      $('#reel-list').innerHTML = j.rows.map((r) => `
+        <div class="item" data-row="${r.row}">
+          <div><strong style="font-style:italic">${esc(get(r, 'Title') || '(untitled)')}</strong> <small>· ${esc(get(r, 'Category'))}${get(r, 'Chapter (weddings)') ? ' · ' + esc(get(r, 'Chapter (weddings)')) : ''} · #${esc(get(r, 'Order'))}</small><br><a class="small" href="${esc(get(r, 'Instagram link or code'))}" target="_blank" rel="noopener">${esc(get(r, 'Instagram link or code'))}</a></div>
+          <div class="row">
+            <label class="toggle"><input type="checkbox" data-f="Visible" ${yes(get(r, 'Visible')) ? 'checked' : ''}>Visible</label>
+            <label class="toggle"><input type="checkbox" data-f="Featured" ${yes(get(r, 'Featured')) ? 'checked' : ''}>Featured</label>
+            <button class="btn btn-ghost btn-sm" data-del type="button">Remove</button>
+          </div>
+        </div>`).join('');
+      $('#reel-list').addEventListener('change', async (e) => {
+        const it = e.target.closest('[data-row]'); if (!it) return;
+        const r = j.rows.find((x) => String(x.row) === it.dataset.row);
+        const values = {}; h.forEach((n, i) => (values[n] = r.cells[i]));
+        $$('[data-f]', it).forEach((c) => (values[c.dataset.f] = c.checked));
+        try { await call('save', { sheet: 'Reels', row: r.row, values }); } catch (x) { alert(x.message); }
+      });
+      $('#reel-list').addEventListener('click', async (e) => {
+        if (!e.target.matches('[data-del]')) return;
+        const it = e.target.closest('[data-row]');
+        if (!confirm('Remove this reel from the website?')) return;
+        try { await call('delete', { sheet: 'Reels', row: +it.dataset.row }); reels(); } catch (x) { alert(x.message); }
+      });
+      $('#reel-add').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const f = e.target;
+        const values = { 'Instagram link or code': f.link.value.trim(), Category: f.cat.value, Title: f.title.value.trim(), 'Chapter (weddings)': f.chapter.value, Featured: f.featured.checked, Visible: true, Order: j.rows.length + 1, 'Poster image URL (optional)': f.poster.value.trim() };
+        try { await call('save', { sheet: 'Reels', values }); reels(); } catch (x) { alert(x.message); }
+      });
+    } catch (e) { fail(e); }
+  }
+
+  /* ---------- job openings ---------- */
+  async function jobs() {
+    loading();
+    try {
+      const j = await call('list', { sheet: 'Jobs' });
+      const h = j.headers;
+      const get = (r, n) => r.cells[h.indexOf(n)];
+      const form = (r) => `
+        <form class="form" data-row="${r ? r.row : ''}">
+          <div class="two"><label class="field"><span>Title *</span><input name="Title" required value="${esc(r ? get(r, 'Title') : '')}"></label>
+          <label class="field"><span>Location</span><input name="Location" value="${esc(r ? get(r, 'Location') : '')}"></label></div>
+          <div class="two"><label class="field"><span>Type</span><input name="Type" placeholder="Full-time, Internship…" value="${esc(r ? get(r, 'Type') : '')}"></label>
+          <label class="field"><span>Order</span><input name="Order" type="number" value="${esc(r ? get(r, 'Order') : j.rows.length + 1)}"></label></div>
+          <label class="field"><span>Description</span><textarea name="Description">${esc(r ? get(r, 'Description') : '')}</textarea></label>
+          <label class="check"><input type="checkbox" name="Active" ${r && (get(r, 'Active') === true || String(get(r, 'Active')).toUpperCase() === 'TRUE') ? 'checked' : ''}><span>Active — show on the Careers page</span></label>
+          <div class="row"><button class="btn btn-primary btn-sm" type="submit">${r ? 'Save' : 'Add opening'}</button>${r ? '<button class="btn btn-ghost btn-sm" type="button" data-del>Delete</button>' : ''}</div>
+        </form>`;
+      view.innerHTML = `<div class="card stack"><h2 class="h3">Add an opening</h2>${form(null)}</div>
+        <h2 class="h3 mt-l">Openings</h2><p class="muted small">Only openings marked Active appear on the website. With none active, example roles are shown and labelled as examples.</p>
+        <div class="stack mt-s">${j.rows.map((r) => `<div class="card">${form(r)}</div>`).join('')}</div>`;
+      $$('form', view).forEach((f) => {
+        f.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const values = { Title: f.Title.value, Location: f.Location.value, Type: f.Type.value, Description: f.Description.value, Active: f.Active.checked, Order: f.Order.value };
+          try { await call('save', { sheet: 'Jobs', row: f.dataset.row ? +f.dataset.row : undefined, values }); jobs(); } catch (x) { alert(x.message); }
+        });
+        const del = $('[data-del]', f);
+        if (del) del.addEventListener('click', async () => { if (!confirm('Delete this opening?')) return; try { await call('delete', { sheet: 'Jobs', row: +f.dataset.row }); jobs(); } catch (x) { alert(x.message); } });
+      });
+    } catch (e) { fail(e); }
+  }
+
+  /* ---------- settings ---------- */
+  async function settings() {
+    loading();
+    try {
+      const j = await call('settings');
+      view.innerHTML = `<form class="card form" id="set-form"><h2 class="h3">Settings</h2>
+        ${j.settings.map((s) => `<label class="field"><span>${esc(s.key)}</span><input name="${esc(s.key)}" value="${esc(s.value)}"><small>${esc(s.help || '')}</small></label>`).join('')}
+        <button class="btn btn-primary" type="submit" style="align-self:flex-start">Save settings</button><div data-msg></div></form>
+        <p class="note mt-m">Packages and prices are edited directly in the Sheet’s Packages tab (one row per package; features one per line).</p>`;
+      $('#set-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const values = {}; $$('input', e.target).forEach((i) => (values[i.name] = i.value));
+        const msg = $('[data-msg]', e.target);
+        try { await call('settings.save', { values }); msg.className = 'status ok'; msg.textContent = 'Saved.'; } catch (x) { msg.className = 'status err'; msg.textContent = x.message; }
+      });
+    } catch (e) { fail(e); }
+  }
+
+  /* ---------- dialog ---------- */
+  function dialog(html) {
+    const d = $('#dlg');
+    $('#dlg-body').innerHTML = html;
+    d.showModal();
+    $('[data-close]', d)?.addEventListener('click', () => d.close());
+  }
+  $('#dlg').addEventListener('click', (e) => { if (e.target.id === 'dlg') e.target.close(); });
+
+  if (!API) $('#login-err').hidden = false, $('#login-err').textContent = 'Not connected yet: add the Apps Script URL to assets/js/config.js (API_URL).';
+  if (key) call('overview').then(start).catch(() => signOut());
+})();
+</script>
+</body>
+</html>

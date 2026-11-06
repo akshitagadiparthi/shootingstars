@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Freelance Network · Shooting Stars Media</title>
+<meta name="description" content="Join the Shooting Stars creative network of freelancers.">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="assets/brand/icon-monogram.svg" type="image/svg+xml">
+<link rel="icon" href="assets/brand/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Shooting Stars Media">
+<meta property="og:title" content="Freelance Network · Shooting Stars Media">
+<meta property="og:description" content="Join the Shooting Stars creative network of freelancers.">
+<meta property="og:image" content="assets/brand/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="assets/fonts/bodoni-moda-latin-standard-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/bodoni-moda-latin-standard-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body data-page="network">
+<main id="main">
+<section class="page-hero"><div class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">Home</a><span aria-hidden="true">›</span><a href="careers.html">Careers</a><span aria-hidden="true">›</span><span aria-current="page">Freelance Network</span></nav>
+<span class="eyebrow"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z"/></svg> CAREERS / FREELANCE NETWORK</span>
+<h1 class="h1 mt-s">Join our<br><span class="chrome">creative network.</span></h1>
+<p class="lead">Work with us on suitable assignments when your skills and availability fit. You may register while employed elsewhere, subject to your employment terms and professional obligations.</p>
+</div></section>
+<section class="section-tight"><div class="wrap" style="max-width:920px">
+  <form class="card form" id="form-freelance" novalidate>
+    <h2 class="h3">Tell us about yourself</h2>
+    <div class="two">
+      <label class="field"><span>Full name *</span><input type="text" name="name" required maxlength="120" autocomplete="name"></label>
+      <label class="field"><span>Email *</span><input type="email" name="email" required maxlength="160" autocomplete="email"></label>
+    </div>
+    <div class="two">
+      <label class="field"><span>Phone *</span><input type="tel" name="phone" required maxlength="20" pattern="[\d\s+\-\(\)]{7,20}" autocomplete="tel" inputmode="tel"></label>
+      <label class="field"><span>Base city *</span><input type="text" name="city" required maxlength="80"></label>
+    </div>
+    <div class="two">
+      <label class="field"><span>Current work status *</span><select name="work_status" required><option value="">Select</option><option>Employed full-time</option><option>Independent freelancer</option><option>Student</option><option>Between roles</option><option>Other</option></select></label>
+      <label class="field"><span>Availability *</span><select name="availability" required><option value="">Select</option><option>Weekdays</option><option>Weekends</option><option>Evenings</option><option>Flexible / project dependent</option></select></label>
+    </div>
+    <div class="two">
+      <label class="field"><span>Preferred work mode *</span><select name="work_mode" required><option value="">Select</option><option>Remote</option><option>On-site</option><option>Hybrid / both</option></select></label>
+      <label class="field"><span>Years of experience</span><input type="number" name="experience" min="0" max="60" inputmode="numeric"></label>
+    </div>
+    <fieldset class="field"><legend>Areas of expertise * (select all that apply)</legend>
+      <div class="checks"><label class="check"><input type="checkbox" name="skills" data-group value="Videography"><span>Videography</span></label><label class="check"><input type="checkbox" name="skills" data-group value="Photography"><span>Photography</span></label><label class="check"><input type="checkbox" name="skills" data-group value="Video editing"><span>Video editing</span></label><label class="check"><input type="checkbox" name="skills" data-group value="Graphic design"><span>Graphic design</span></label><label class="check"><input type="checkbox" name="skills" data-group value="Copywriting"><span>Copywriting</span></label><label class="check"><input type="checkbox" name="skills" data-group value="Digital marketing"><span>Digital marketing</span></label><label class="check"><input type="checkbox" name="skills" data-group value="Performance marketing"><span>Performance marketing</span></label><label class="check"><input type="checkbox" name="skills" data-group value="Web development"><span>Web development</span></label><label class="check"><input type="checkbox" name="skills" data-group value="Production management"><span>Production management</span></label><label class="check"><input type="checkbox" name="skills" data-group value="Other"><span>Other</span></label></div>
+    </fieldset>
+    <div class="field"><span>Portfolio / Work Samples Link *</span>
+      <div class="stack" data-links style="gap:10px"><input class="input" type="url" name="portfolio" required maxlength="500" placeholder="https://" aria-label="Portfolio link"></div>
+      <small>Share Google Drive, Behance, Instagram, YouTube, Vimeo, personal website or another suitable link. Ensure our reviewers can access the work without requesting private credentials.</small>
+      <button class="btn btn-ghost btn-sm" type="button" data-addlink style="align-self:flex-start">+ Add another portfolio link</button>
+    </div>
+    <label class="field"><span>Role in showcased projects</span><input type="text" name="role_in_projects" maxlength="300"></label>
+    <div class="two">
+      <label class="field"><span>Rate expectations (optional)</span><input type="text" name="rates" maxlength="200"></label>
+      <label class="field"><span>Equipment available (optional)</span><input type="text" name="equipment" maxlength="300"></label>
+    </div>
+    <fieldset class="field"><legend>Project commitments *</legend>
+      <label class="check"><input type="checkbox" name="commitment_assignments" value="agreed" required><span>I understand registration does not guarantee assignments; I will explicitly accept scope, timelines and compensation before being committed to any project. Once accepted, I will deliver the agreed work or promptly escalate genuine obstacles.</span></label>
+      <label class="check"><input type="checkbox" name="commitment_lawful" value="agreed" required><span>I confirm I can lawfully undertake this work and will respect confidentiality, client rights and any employment restrictions that apply.</span></label>
+      <label class="check"><input type="checkbox" name="consent" value="yes" required><span>I agree that Shooting Stars Media may contact me about this request, as described in the <a href="privacy.html" target="_blank">privacy notice</a>.</span></label>
+    </fieldset>
+    <button class="btn btn-primary" type="submit" style="align-self:flex-start"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z"/></svg> Register ↗</button>
+  </form>
+</div></section>
+</main>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/forms.js"></script>
+<script src="assets/js/pages.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "shooting-stars-website",
+  "private": true,
+  "description": "Shooting Stars Media website (static) with a Google Sheets backend (Apps Script).",
+  "scripts": {
+    "serve": "python3 -m http.server 8765",
+    "test:backend": "node tests/backend.test.cjs",
+    "test:site": "node tests/site.test.cjs",
+    "icons": "python3 tools/make_logo.py assets/fonts/bodoni-moda-latin-standard-italic.woff2 && node tools/render_icons.cjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.47.0"
+  }
+}

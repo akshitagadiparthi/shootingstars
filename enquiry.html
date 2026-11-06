@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Request a Shoot Quote · Shooting Stars Media</title>
+<meta name="description" content="Let's make it happen. Request a Shooting Stars Films quote.">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="assets/brand/icon-monogram.svg" type="image/svg+xml">
+<link rel="icon" href="assets/brand/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Shooting Stars Media">
+<meta property="og:title" content="Request a Shoot Quote · Shooting Stars Media">
+<meta property="og:description" content="Let's make it happen. Request a Shooting Stars Films quote.">
+<meta property="og:image" content="assets/brand/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="assets/fonts/bodoni-moda-latin-standard-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/bodoni-moda-latin-standard-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body data-page="enquiry">
+<main id="main">
+<section class="page-hero"><div class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">Home</a><span aria-hidden="true">›</span><a href="start.html">Start a Project</a><span aria-hidden="true">›</span><span aria-current="page">Shoot Enquiry</span></nav>
+<span class="eyebrow"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z"/></svg> FILMS / SHOOT ENQUIRY</span>
+<h1 class="h1 mt-s">Let's make<br><span class="chrome">it happen.</span></h1>
+<p class="lead">Tell us what, where and when you need to shoot. We will prepare a quote based on production style, coverage, editing and availability. No payment or booking is confirmed at this stage.</p>
+</div></section>
+<section class="section-tight"><div class="wrap grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:22px;align-items:start">
+  <form class="card form" id="form-films" novalidate style="min-width:0;scroll-margin-top:100px">
+    <div class="split" style="align-items:baseline"><strong data-steptitle style="font-size:22px;font-style:italic">Step 1 · Plan your shoot</strong><span class="muted small" data-count>1 of 2</span></div>
+    <div class="progress"><i style="width:50%"></i></div>
+    <p class="note">This is an enquiry, not a booking. Final equipment, editing, deliverables and price depend on the brief.</p>
+    <div class="stack" data-step="1">
+      <fieldset class="field"><legend>Production type *</legend>
+        <div class="checks"><label class="check"><input type="radio" name="production" value="Instant — iPhone" required checked><span>Instant — iPhone</span></label><label class="check"><input type="radio" name="production" value="Professional — high-end camera production" required><span>Professional — high-end camera production</span></label><label class="check"><input type="radio" name="production" value="Both — iPhone and professional cameras" required><span>Both — iPhone and professional cameras</span></label><label class="check"><input type="radio" name="production" value="Not sure — advise me" required><span>Not sure — advise me</span></label></div>
+      </fieldset>
+      <div class="two">
+        <label class="field"><span>What are you shooting? *</span><select name="shoot_type" required><option value="">Select</option><option>Store / Product Launch</option><option>Brand &amp; Product Shoot</option><option>Wedding / Function</option><option>Sports League — Pickleball</option><option>Sports League — Cricket</option><option>Sports League — Other</option><option>Birthday / House Party</option><option>Real Estate</option><option>Corporate / Concert</option><option>Other / Not Sure</option></select></label>
+        <label class="field"><span>Package preference *</span><select name="package" required><option>Custom / Not sure</option><option>Quick Shoot</option><option>Half Day</option><option>Event Highlights</option><option>Sports Match</option><option>Sports League Coverage</option><option>Wedding — Essential</option><option>Wedding — Silver</option><option>Wedding — Gold</option><option>Wedding — Platinum</option><option>Brand Shoot</option><option>Product Reel</option><option>Professional Event Film</option><option>Professional Wedding Film</option><option>Commercial / Brand Film</option></select></label>
+      </div>
+      <div class="two">
+        <label class="field"><span>Preferred shoot date *</span><input type="date" name="shoot_date" required></label>
+        <label class="field"><span>City / shoot location *</span><input type="text" name="location" required maxlength="200" placeholder="Venue, city"></label>
+      </div>
+      <div class="priority" aria-live="polite"></div>
+      <label class="field"><span>If the date is unavailable</span><select name="date_flexibility"><option>Contact me to discuss alternatives</option><option>Date is fixed — no alternatives</option><option>My date is flexible</option></select></label>
+      <label class="field"><span>Anything else?</span><textarea name="notes" maxlength="3000" placeholder="Number of events, hours, deliverables, songs you love…"></textarea></label>
+      <button class="btn btn-primary" type="button" data-next style="align-self:flex-start">Continue to contact details →</button>
+    </div>
+    <div class="stack" data-step="2" hidden>
+      <div class="summary" data-summary></div>
+      <small class="muted">Availability and final price are not yet confirmed.</small>
+      <div class="two">
+        <label class="field"><span>Your name *</span><input type="text" name="name" required maxlength="120" autocomplete="name"></label>
+        <label class="field"><span>Mobile number *</span><input type="tel" name="phone" required maxlength="20" pattern="[\d\s+\-\(\)]{7,20}" autocomplete="tel" inputmode="tel"></label>
+      </div>
+      <label class="field"><span>Email (optional)</span><input type="email" name="email" maxlength="160" autocomplete="email"></label>
+      <label class="check"><input type="checkbox" name="consent" value="yes" required><span>I agree that Shooting Stars Media may contact me about this request, as described in the <a href="privacy.html" target="_blank">privacy notice</a>.</span></label>
+      <div class="row"><button class="btn btn-ghost" type="button" data-back>← Edit shoot details</button><button class="btn btn-primary" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z"/></svg> Send enquiry ↗</button></div>
+      <p class="note">Sending this does not reserve a date. A confirmed quote and crew availability follow from our team.</p>
+    </div>
+  </form>
+  <aside class="card stack side-steps">
+    <span class="eyebrow">SIMPLE QUOTE REQUEST</span>
+    <h3>One short request. Clear next steps.</h3>
+    <ol><li>Choose Instant or Professional.</li><li>Select the shoot and package preference.</li><li>Share date, venue and deliverables.</li><li>Our team reviews urgency, feasibility and pricing.</li><li>Confirm only after approving the quotation.</li></ol>
+    <div class="row"><span class="tag">No account needed</span><span class="tag">Mobile friendly</span><span class="tag">Clear confirmation</span></div>
+  </aside>
+</div></section>
+</main>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/forms.js"></script>
+<script src="assets/js/pages.js"></script>
+</body>
+</html>
