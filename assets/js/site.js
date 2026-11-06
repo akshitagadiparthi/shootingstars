@@ -177,7 +177,7 @@
   /* ---------- the night sky ----------
    * Three layers of twinkling stars that drift with scroll, plus a steady
    * stream of shooting stars (some silver, some softly coloured) and the
-   * occasional little shower. Visitors can tap a shooting star to catch it.
+   * occasional little shower.
    */
   const sky = document.createElement('canvas');
   sky.id = 'ss-sky'; sky.setAttribute('aria-hidden', 'true');
@@ -334,69 +334,6 @@
     toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
   };
 
-  /* ---------- catch a shooting star, anywhere on the site ---------- */
-  const WISH_AT = 3;
-  let caught = 0;
-  try { caught = Number(sessionStorage.getItem('ss_caught') || 0); } catch (e) { /* ignore */ }
-  let badge = null;
-  function showBadge() {
-    if (!badge) {
-      badge = document.createElement('button');
-      badge.type = 'button'; badge.className = 'star-badge';
-      badge.setAttribute('aria-label', 'Shooting stars you have caught');
-      badge.addEventListener('click', () => SS.toast(caught >= WISH_AT ? 'You’ve made your wish. Keep catching!' : `Tap a shooting star to catch it. ${WISH_AT - caught} more for a wish.`));
-      document.body.append(badge);
-    }
-    badge.innerHTML = SS.star + `<span>${caught} caught</span>`;
-    badge.classList.remove('pop'); void badge.offsetWidth; badge.classList.add('pop');
-  }
-  if (caught) showBadge();
-
-  function wish() {
-    SS.shower();
-    const w = document.createElement('div');
-    w.className = 'wish'; w.setAttribute('role', 'dialog'); w.setAttribute('aria-modal', 'true'); w.setAttribute('aria-label', 'Make a wish');
-    w.innerHTML = `<div class="card"><span class="eyebrow accent-fun">${SS.star} ${WISH_AT} shooting stars caught</span><h2 class="h2">Make a <span class="chrome">wish.</span></h2><p class="lead">A launch that stops the scroll? A wedding film you’ll watch every year? Tell us. Wishes are what we shoot.</p><div class="row" style="justify-content:center"><a class="btn btn-primary" href="start.html?from=wish">Make my wish ↗</a><button class="btn btn-ghost" type="button" data-close>Keep stargazing</button></div></div>`;
-    document.body.append(w);
-    const close = () => w.remove();
-    w.addEventListener('click', (e) => { if (e.target === w || e.target.closest('[data-close]')) close(); });
-    document.addEventListener('keydown', function k(e) { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', k); } });
-    w.querySelector('.btn-primary').focus();
-  }
-
-  function distToSegment(px, py, ax, ay, bx, by) {
-    const dx = bx - ax, dy = by - ay, l = dx * dx + dy * dy || 1;
-    const u = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / l));
-    return Math.hypot(px - (ax + u * dx), py - (ay + u * dy));
-  }
-  if (!reduce) {
-    document.addEventListener('pointerdown', (e) => {
-      if (e.target.closest('a, button, input, select, textarea, label, iframe, video, .game, .story, .lightbox, .wish, [role="dialog"], .reel-card')) return;
-      let best = null, bestD = 1e9;
-      for (const m of meteors) {
-        const sp = Math.hypot(m.vx, m.vy);
-        const tx = m.x - (m.vx / sp) * Math.min(m.len, 90), ty = m.y - (m.vy / sp) * Math.min(m.len, 90);
-        const d = distToSegment(e.clientX, e.clientY, m.x, m.y, tx, ty);
-        if (d < bestD) { bestD = d; best = m; }
-      }
-      if (!best || bestD > 42) return;
-      meteors.splice(meteors.indexOf(best), 1);
-      SS.burst(best.x, best.y, 46, best.tint === '255,255,255' ? null : best.tint);
-      caught++;
-      try { sessionStorage.setItem('ss_caught', String(caught)); } catch (x) { /* ignore */ }
-      showBadge();
-      if (navigator.vibrate) navigator.vibrate(12);
-      if (caught === WISH_AT) setTimeout(wish, 450);
-      else if (caught < WISH_AT) SS.toast(`You caught a shooting star! ${WISH_AT - caught} more and you get a wish.`);
-      else SS.toast(['Another one!', 'Star catcher!', 'Nice catch!', 'You’re a natural.'][caught % 4]);
-    });
-    // a gentle hint, once per visit
-    try {
-      if (!sessionStorage.getItem('ss_hint') && !caught) {
-        setTimeout(() => { if (SS._game && SS._game.state().playing) return; SS.toast(fine ? 'Psst… you can click the shooting stars to catch them.' : 'Psst… tap a shooting star to catch it.', 4500); try { sessionStorage.setItem('ss_hint', '1'); } catch (e) { /* ignore */ } }, 7000);
-      }
-    } catch (e) { /* ignore */ }
-  }
 
   // Easter egg: type "wish" anywhere (outside a form) for a meteor shower.
   let typed = '';

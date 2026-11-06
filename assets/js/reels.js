@@ -24,6 +24,9 @@
 
   const ICON_SOUND = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg>';
   const ICON_MUTE = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>';
+  const ARROW_L = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
+  const ARROW_R = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
+  const ICON_IG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>';
   const permalink = (r) => `https://www.instagram.com/${r.kind === 'p' ? 'p' : 'reel'}/${encodeURIComponent(r.id)}/`;
   const embedUrl = (r) => permalink(r) + 'embed/';
   SS.permalink = permalink;
@@ -50,7 +53,7 @@
     f.setAttribute('allowfullscreen', '');
     return f;
   }
-  const IG = { HEADER: 54, BOX: 1.25, PIC: 1.25 * 9 / 16 };
+  const IG = { HEADER: 54, BOX: 1.25, PIC: 1.25 * 9 / 16, MIN: 360 };
   function fitCrop(box) {
     const f = box.querySelector('iframe');
     if (!f) return;
@@ -58,10 +61,15 @@
     // cover the box: the 9:16 picture fills the width (or height if the box is wider than 9:16)
     const picW = Math.max(C, H * 9 / 16);
     const W = picW / IG.PIC;
-    f.style.width = W + 'px';
-    f.style.height = (IG.HEADER + W * IG.BOX + 60) + 'px';
+    // Instagram's player needs ~360px to lay out normally, so small boxes
+    // (the hero reel on a phone) get a full-size player scaled down.
+    const R = Math.max(W, IG.MIN), s = W / R;
+    f.style.width = R + 'px';
+    f.style.height = (IG.HEADER + R * IG.BOX + 60) + 'px';
+    f.style.transformOrigin = '0 0';
+    f.style.transform = s < 1 ? `scale(${s})` : '';
     f.style.left = (C - W) / 2 + 'px';
-    f.style.top = (H - W * IG.BOX) / 2 - IG.HEADER + 'px';
+    f.style.top = (H - W * IG.BOX) / 2 - IG.HEADER * s + 'px';
   }
   const cropRO = 'ResizeObserver' in window ? new ResizeObserver((es) => es.forEach((e) => fitCrop(e.target))) : null;
   function igCrop(box, r) {
@@ -176,11 +184,15 @@
     el.className = 'story';
     el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Reels viewer');
     el.innerHTML = `<div class="bars">${list.map(() => '<i><b></b></i>').join('')}</div>
-      <div class="top"><strong></strong><div class="row" style="gap:8px"><button class="ctrl" type="button" data-mute aria-label="Sound on or off">${ICON_SOUND}</button><button class="ctrl" type="button" data-close aria-label="Close">✕</button></div></div>
+      <div class="top"><div class="story-title"><strong></strong><span class="count"></span></div><div class="row" style="gap:8px"><a class="ctrl" data-ig target="_blank" rel="noopener" aria-label="Open on Instagram">${ICON_IG}</a><button class="ctrl" type="button" data-mute aria-label="Sound on or off">${ICON_SOUND}</button><button class="ctrl" type="button" data-close aria-label="Close">✕</button></div></div>
       <div class="stage"></div>
       <button class="nav-zone prev" type="button" aria-label="Previous reel"></button><button class="nav-zone next" type="button" aria-label="Next reel"></button>
-      <button class="ctrl side l" type="button" data-prev aria-label="Previous reel">‹</button><button class="ctrl side r" type="button" data-next aria-label="Next reel">›</button>
-      <div class="bottom"><a class="btn btn-primary btn-sm" data-shoot href="enquiry.html">Shoot like this ↗</a><a class="btn btn-ghost btn-sm" data-ig target="_blank" rel="noopener">Instagram ↗</a></div>`;
+      <button class="ctrl side l" type="button" data-prev aria-label="Previous reel">${ARROW_L}</button><button class="ctrl side r" type="button" data-next aria-label="Next reel">${ARROW_R}</button>
+      <div class="bottom">
+        <button class="story-prev" type="button" data-prev aria-label="Previous reel">${ARROW_L}</button>
+        <a class="story-link" data-shoot href="enquiry.html">Shoot like this ↗</a>
+        <button class="story-next" type="button" data-next><span>Next reel</span>${ARROW_R}</button>
+      </div>`;
     document.body.append(el);
     document.body.style.overflow = 'hidden';
     const stage = el.querySelector('.stage'), bars = SS.$$('.bars i', el), title = el.querySelector('.top strong'), muteBtn = el.querySelector('[data-mute]');
@@ -192,6 +204,8 @@
       const r = list[i];
       bars.forEach((b, k) => { b.classList.toggle('done', k < i); b.querySelector('b').style.width = k < i ? '100%' : '0'; });
       title.textContent = r.chapter || r.title || '';
+      el.querySelector('.count').textContent = list.length > 1 ? `${i + 1} / ${list.length}` : '';
+      SS.$$('.story-next, [data-prev], .side.r', el).forEach((b) => { b.hidden = list.length < 2; });
       el.querySelector('[data-shoot]').href = 'enquiry.html?shoot=' + encodeURIComponent(r.category);
       const ig = el.querySelector('[data-ig]');
       ig.hidden = !r.id || String(r.id).startsWith('video-');
@@ -233,8 +247,8 @@
     el.querySelector('[data-close]').addEventListener('click', close);
     el.querySelector('.nav-zone.prev').addEventListener('click', () => show(i - 1));
     el.querySelector('.nav-zone.next').addEventListener('click', () => show(i + 1));
-    el.querySelector('[data-prev]').addEventListener('click', () => show(i - 1));
-    el.querySelector('[data-next]').addEventListener('click', () => show(i + 1));
+    SS.$$('[data-prev]', el).forEach((b) => b.addEventListener('click', () => show(i - 1)));
+    SS.$$('[data-next]', el).forEach((b) => b.addEventListener('click', () => show(i + 1)));
     muteBtn.addEventListener('click', () => { muted = !muted; const v = stage.querySelector('video'); if (v) v.muted = muted; muteBtn.innerHTML = muted ? ICON_MUTE : ICON_SOUND; });
     let sx = null;
     el.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; }, { passive: true });

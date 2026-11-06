@@ -13,7 +13,7 @@ window.SS_CONFIG = {
   WHATSAPP: '',
   EMAIL: '',
   INSTAGRAM_FILMS: 'https://www.instagram.com/shootingstars_films/',
-  INSTAGRAM_LABS: 'https://www.instagram.com/shooting_stars_digital_labs/',
+  INSTAGRAM_LABS: 'https://www.instagram.com/shootingstars_marketinglabs/',
   COMPANY: 'Shooting Stars Media Pvt. Ltd.',
   // How long the browser keeps live content (reels, packages, jobs) before asking again.
   CONTENT_CACHE_MINUTES: 5

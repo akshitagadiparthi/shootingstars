@@ -128,7 +128,7 @@
       if (C.WHATSAPP) items.push(`<a class="btn btn-ghost" href="${SS.whatsapp()}" target="_blank" rel="noopener">WhatsApp us</a>`);
       if (C.EMAIL) items.push(`<a class="btn btn-ghost" href="mailto:${esc(C.EMAIL)}">${esc(C.EMAIL)}</a>`);
       items.push(`<a class="btn btn-ghost" href="${esc(C.INSTAGRAM_FILMS)}" target="_blank" rel="noopener">@shootingstars_films</a>`);
-      items.push(`<a class="btn btn-ghost" href="${esc(C.INSTAGRAM_LABS)}" target="_blank" rel="noopener">@shooting_stars_digital_labs</a>`);
+      items.push(`<a class="btn btn-ghost" href="${esc(C.INSTAGRAM_LABS)}" target="_blank" rel="noopener">@shootingstars_marketinglabs</a>`);
       $('contact-direct').innerHTML = items.join('');
     },
     work() {
