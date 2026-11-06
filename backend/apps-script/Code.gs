@@ -34,7 +34,7 @@ var HEADERS = {
   Careers: ['Ref', 'Received (IST)', 'Status', 'Name', 'Email', 'Role', 'City', 'CV link', 'Portfolio', 'Notes', 'Source', 'Form page'],
   Freelance: ['Ref', 'Received (IST)', 'Status', 'Name', 'Email', 'Phone', 'City', 'Work status', 'Availability', 'Work mode',
     'Experience (yrs)', 'Skills', 'Portfolio links', 'Role in projects', 'Rates', 'Equipment', 'Commitments accepted', 'Source', 'Form page'],
-  Reels: ['Instagram link or code', 'Category', 'Title', 'Chapter (weddings)', 'Featured', 'Visible', 'Order', 'Poster image URL (optional)'],
+  Reels: ['Instagram link or code', 'Category', 'Title', 'Chapter (weddings)', 'Featured', 'Visible', 'Order', 'Poster image URL (optional)', 'Video file URL (MP4, optional)', 'Plays in Instagram player'],
   Jobs: ['Title', 'Location', 'Type', 'Description', 'Active', 'Order'],
   Packages: ['Mode', 'Category', 'Title', 'Tag', 'Price', 'Price note', 'Description', 'Features (one per line)', 'Popular', 'Visible', 'Order'],
   Settings: ['Setting', 'Value', 'What it does']
@@ -265,9 +265,10 @@ function nextRef_(prefix) {
 }
 
 function source_(meta) {
+  if (meta.from === 'catch-game') return 'mini game';
+  if (meta.from === 'wish') return 'caught-star wish';
   if (meta.utm_source) return meta.utm_source;
   if (meta.referrer) { var m = /^https?:\/\/([^/]+)/.exec(meta.referrer); return m ? m[1].replace(/^www\./, '') : 'referral'; }
-  if (String(meta.page || '').indexOf('reach') >= 0) return 'reach game';
   return 'direct';
 }
 
@@ -277,7 +278,6 @@ function writeEnquiry_(type, ref, d, meta, now, s) {
   var priority = films ? priorityFor_(days, s) : '';
   var rb = respondBy_(now, s);
   var src = source_(meta);
-  if (/reach-game/.test(String(d.challenge || d.notes || ''))) src = 'reach game';
   var row = [
     ref, now, films ? 'Films' : 'Marketing Labs', 'New', priority, rb.date,
     clean_(d.name, 120), clean_(d.phone, 30), clean_(d.email, 160),
@@ -366,13 +366,16 @@ function getContent_() {
   try {
     reels = rows_(TAB.REELS).map(function (r) {
       var ig = parseInstagram_(r['Instagram link or code']);
-      if (!ig) return null;
+      if (!ig && !r['Video file URL (MP4, optional)']) return null;
+      ig = ig || { id: 'video-' + r._row, kind: 'reel' };
       return {
         id: ig.id, kind: ig.kind, category: String(r.Category || 'featured').trim().toLowerCase(), title: String(r.Title || ''),
         chapter: String(r['Chapter (weddings)'] || ''), featured: bool_(r.Featured), visible: r.Visible === '' ? true : bool_(r.Visible),
-        order: num_(r.Order, r._row), poster: String(r['Poster image URL (optional)'] || '')
+        order: num_(r.Order, r._row), poster: String(r['Poster image URL (optional)'] || ''),
+        video: String(r['Video file URL (MP4, optional)'] || ''),
+        embed: r['Plays in Instagram player'] === '' || r['Plays in Instagram player'] === undefined ? true : bool_(r['Plays in Instagram player'])
       };
-    }).filter(function (r) { return r && r.visible; });
+    }).filter(function (r) { return r && r.visible && (r.video || r.embed); });
   } catch (e) { console.error(e); }
   var jobs = [];
   try {
@@ -488,7 +491,7 @@ function handleAdmin_(body) {
     var sh2 = sheet_(body.sheet);
     var head2 = HEADERS[body.sheet];
     var vals = head2.map(function (h) { var v = (body.values || {})[h]; return typeof v === 'boolean' ? v : clean_(v, 3000); });
-    if (body.sheet === TAB.REELS && !parseInstagram_(vals[0])) throw userError_('That does not look like an Instagram link');
+    if (body.sheet === TAB.REELS && !parseInstagram_(vals[0]) && !vals[8]) throw userError_('Add an Instagram link or a video file URL');
     if (body.row) {
       var r = Number(body.row);
       if (r < 2 || r > sh2.getLastRow()) throw userError_('Row not found');
@@ -644,6 +647,8 @@ function setup() {
   var reels = ss.getSheetByName(TAB.REELS);
   reels.getRange('B2:B').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(REEL_CATEGORIES, true).setAllowInvalid(true).build());
   reels.getRange('E2:F').insertCheckboxes();
+  reels.getRange('J2:J').insertCheckboxes();
+  reels.getRange('J1').setNote('Untick if the reel shows “Watch on Instagram” instead of playing (Instagram blocks some reels, usually because of licensed music). Those reels only appear on the site once a video file is added in column I.');
   var jobs = ss.getSheetByName(TAB.JOBS);
   jobs.getRange('E2:E').insertCheckboxes();
   var pk = ss.getSheetByName(TAB.PACKAGES);
@@ -670,6 +675,9 @@ function installTriggers_() {
   ScriptApp.newTrigger('refreshInstagramToken').timeBased().everyWeeks(1).create();
 }
 
+// Reels Instagram would not play outside its app when checked on 6 Nov 2026.
+var BLOCKED = ['DeefV69P6ei', 'Dc7pyMAJFdG', 'Dc6WiDMpMnn', 'DdBMfjGpCKf', 'DetXGpUvQKu', 'DUaqGPkk5_a'];
+
 function seedReels_(sh) {
   var R = [
     ['https://www.instagram.com/reel/DeefV69P6ei/', 'featured', 'Featured reel', '', true],
@@ -691,8 +699,8 @@ function seedReels_(sh) {
     ['https://www.instagram.com/reel/DUaqGPkk5_a/', 'automotive', 'Car shoot', '', true],
     ['https://www.instagram.com/reel/DaXpjSng9n4/', 'movies', 'Movie promotion', '', true],
     ['https://www.instagram.com/p/DerXr-dgfj-/', 'photography', 'Photography', '', true]
-  ].map(function (r, i) { return [r[0], r[1], r[2], r[3], r[4], true, i + 1, '']; });
-  sh.getRange(2, 1, R.length, 8).setValues(R);
+  ].map(function (r, i) { return [r[0], r[1], r[2], r[3], r[4], true, i + 1, '', '', BLOCKED.indexOf(parseInstagram_(r[0]).id) < 0]; });
+  sh.getRange(2, 1, R.length, 10).setValues(R);
 }
 
 function seedJobs_(sh) {

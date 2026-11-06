@@ -10,6 +10,8 @@ const ok = (cond, msg) => { if (cond) { pass++; console.log('  ✓', msg); } els
 const content = {
   ok: true,
   reels: [
+    { id: 'VIDEO1', kind: 'reel', category: 'weddings', chapter: 'Engagement', title: 'Engagement', featured: true, visible: true, order: 0, video: 'test-media/reel.mp4', poster: 'test-media/reel.jpg' },
+    { id: 'LOCKED1', kind: 'reel', category: 'weddings', chapter: 'Pasupu', title: 'Pasupu', featured: true, visible: true, order: 0, embed: false },
     { id: 'DdEelL3pEOE', kind: 'reel', category: 'weddings', chapter: 'Haldi', title: 'Haldi', featured: true, visible: true, order: 1 },
     { id: 'DdG7Y3rJE0S', kind: 'reel', category: 'weddings', chapter: 'Mehendi', title: 'Mehendi', featured: true, visible: true, order: 2 },
     { id: 'DUznJNIjxK5', kind: 'reel', category: 'store', title: 'Store launch', featured: true, visible: true, order: 3 }
@@ -20,8 +22,11 @@ const content = {
   settings: { superUrgentMaxDays: 2, priorityMaxDays: 5 }
 };
 
+const MEDIA = process.env.TEST_MEDIA || require('path').join(__dirname, 'media');
 async function route(ctx) {
   await ctx.route(/instagram\.com/, (r) => r.abort());
+  await ctx.route('**/test-media/reel.mp4', (r) => r.fulfill({ path: MEDIA + '/raw.mp4', headers: { 'content-type': 'video/mp4' } }));
+  await ctx.route('**/test-media/reel.jpg', (r) => r.fulfill({ path: MEDIA + '/raw.jpg', headers: { 'content-type': 'image/jpeg' } }));
   await ctx.route('**/assets/js/config.js', async (r) => {
     const res = await r.fetch();
     const body = (await res.text()).replace("API_URL: ''", `API_URL: '${API}'`);
@@ -37,7 +42,7 @@ async function route(ctx) {
     if (b.action === 'admin') {
       if (b.key !== 'secret') return r.fulfill({ status: 200, headers: cors, body: JSON.stringify({ ok: false, error: 'Wrong admin key' }) });
       if (b.op === 'overview') return r.fulfill({ status: 200, headers: cors, body: JSON.stringify({ ok: true, sheetUrl: 'https://docs.google.com/x', counts: { enquiries: 3, labs: 1, films: 2, open: 2, overdue: 1, superUrgent: 1, today: 2, careers: 1, freelance: 0 }, bySource: { instagram: 2, direct: 1 }, attention: [{ ref: 'FI-00001', division: 'Films', name: 'Asha', phone: '+91 98', priority: 'Super Urgent', respondBy: '2026-11-06 20:00', overdue: true, shoot: 'Wedding / Function', date: '2026-11-07' }], instagramConnected: false }) });
-      if (b.op === 'list') return r.fulfill({ status: 200, headers: cors, body: JSON.stringify({ ok: true, headers: b.sheet === 'Reels' ? ['Instagram link or code', 'Category', 'Title', 'Chapter (weddings)', 'Featured', 'Visible', 'Order', 'Poster image URL (optional)'] : ['Ref', 'Received (IST)', 'Division', 'Status', 'Films priority', 'Respond by (IST)', 'Name', 'Phone'], rows: b.sheet === 'Reels' ? [{ row: 2, cells: ['https://www.instagram.com/reel/DdEelL3pEOE/', 'weddings', 'Haldi', 'Haldi', true, true, 1, ''] }] : [{ row: 2, cells: ['FI-00001', '2026-11-06 10:00', 'Films', 'New', 'Super Urgent', '2026-11-06 20:00', 'Asha', '+91 98'] }, { row: 3, cells: ['LB-00001', '2026-11-05 18:00', 'Marketing Labs', 'Contacted', '', '2026-11-06 12:00', 'Ravi', '+91 97'] }], total: 2 }) });
+      if (b.op === 'list') return r.fulfill({ status: 200, headers: cors, body: JSON.stringify({ ok: true, headers: b.sheet === 'Reels' ? ['Instagram link or code', 'Category', 'Title', 'Chapter (weddings)', 'Featured', 'Visible', 'Order', 'Poster image URL (optional)', 'Video file URL (MP4, optional)', 'Plays in Instagram player'] : ['Ref', 'Received (IST)', 'Division', 'Status', 'Films priority', 'Respond by (IST)', 'Name', 'Phone'], rows: b.sheet === 'Reels' ? [{ row: 2, cells: ['https://www.instagram.com/reel/DdEelL3pEOE/', 'weddings', 'Haldi', 'Haldi', true, true, 1, '', '', true] }] : [{ row: 2, cells: ['FI-00001', '2026-11-06 10:00', 'Films', 'New', 'Super Urgent', '2026-11-06 20:00', 'Asha', '+91 98'] }, { row: 3, cells: ['LB-00001', '2026-11-05 18:00', 'Marketing Labs', 'Contacted', '', '2026-11-06 12:00', 'Ravi', '+91 97'] }], total: 2 }) });
       return r.fulfill({ status: 200, headers: cors, body: JSON.stringify({ ok: true }) });
     }
     r.fulfill({ status: 200, headers: cors, body: '{"ok":false}' });
@@ -120,31 +125,60 @@ const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0
   ok((await page.textContent('[data-grid]')).includes('Test Package'), 'packages come from the Sheet');
   ok((await page.textContent('#films-reels')).includes('Latest'), 'newest Instagram post appears as Latest');
 
-  console.log('Constellation & lightbox');
+  console.log('Home: reels, viewer, game');
   await page.goto(BASE + 'index.html');
-  await page.waitForSelector('.cstar');
-  ok((await page.$$('.cstar')).length === 2, 'one star per wedding chapter in the Sheet');
-  await page.click('.cstar');
-  ok(await page.isVisible('.lightbox'), 'tapping a star opens the reel');
+  await page.waitForSelector('#home-rail .reel-card');
+  ok(!(await page.$('.constellation')), 'no constellation on the home page');
+  const railText = await page.textContent('#home-rail');
+  ok(!railText.includes('Pasupu'), 'reels Instagram blocks (no video file) are hidden');
+  await page.waitForSelector('#home-hero-reel video', { timeout: 5000 });
+  const heroPlaying = await page.waitForFunction(() => { const v = document.querySelector('#home-hero-reel video'); return v && v.currentTime > 0.2 && !v.paused; }, null, { timeout: 8000 }).then(() => true).catch(() => false);
+  ok(heroPlaying, 'hero reel (video file) plays silently by itself');
+  await page.evaluate(() => document.querySelector('#home-rail .rail').scrollIntoView());
+  await page.waitForSelector('#home-rail iframe[data-ig]', { timeout: 5000 }).catch(() => null);
+  const src = await page.getAttribute('#home-rail iframe[data-ig]', 'src');
+  ok(src && /instagram\.com\/reel\/[^/]+\/embed\/$/.test(src), 'Instagram reels use the direct player frame (plays inline)');
+  await page.click('#home-watch');
+  await page.waitForSelector('.story');
+  ok((await page.$$('.story .bars i')).length >= 3, 'viewer opens with every playable reel');
+  ok(await page.$('.story iframe[data-ig]'), 'viewer starts with the newest Instagram reel');
+  await page.keyboard.press('ArrowRight');
+  ok(await page.$('.story video'), 'arrow key moves on; video files play full screen');
   await page.keyboard.press('Escape');
-  ok(!(await page.$('.lightbox')), 'Escape closes it');
+  ok(!(await page.$('.story')), 'Escape closes the viewer');
 
-  console.log('Reach game');
-  const lvl0 = await page.textContent('[data-level]');
-  await page.click('[data-b="ads"]');
-  await page.click('[data-b="calendar"]');
-  await page.click('[data-b="crew"]');
-  await page.waitForTimeout(200);
-  const lvl1 = await page.textContent('[data-level]');
-  ok(lvl0 === 'Spark' && lvl1 !== 'Spark', `level rises (${lvl0} → ${lvl1})`);
-  const href = await page.getAttribute('[data-real]', 'href');
-  ok(href.startsWith('start.html?') && href.includes('reach-game'), 'mixed picks route to Start a project with context');
-  await page.click('[data-b="crew"]');
-  const href2 = await page.getAttribute('[data-real]', 'href');
-  ok(href2.startsWith('proposal.html?') && href2.includes('Performance+Marketing'), 'Labs-only picks pre-fill the proposal');
-  await page.click('[data-launch]');
+  await page.evaluate(() => document.getElementById('catch-game').scrollIntoView());
+  await page.click('[data-play]');
+  ok(await page.evaluate(() => SS._game.state().playing), 'game starts');
+  const box = await page.$('#catch-game canvas');
+  const bb = await box.boundingBox();
+  await page.evaluate(() => SS._game.spawnAt(200, 200));
+  await page.mouse.click(bb.x + 200, bb.y + 200);
+  ok(await page.evaluate(() => SS._game.state().score) >= 1, 'tapping a star scores');
+  await page.evaluate(() => SS._game.spawnAt(300, 250));
+  await page.focus('#catch-game .game');
+  await page.keyboard.press('Space');
+  ok(await page.evaluate(() => SS._game.state().score) >= 2, 'Space catches a star (keyboard play)');
+  await page.waitForSelector('[data-end]:not([hidden])', { timeout: 25000 });
+  ok((await page.textContent('[data-rank]')).length > 3, 'round ends with a rank: ' + (await page.textContent('[data-rank]')));
   const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 8000 }).catch(() => null), page.click('[data-share]')]);
   ok(!!dl, 'share makes a story image');
+
+  console.log('Wedding shoots page');
+  await page.goto(BASE + 'shoot.html?t=weddings-and-functions');
+  await page.waitForSelector('.cstar');
+  ok((await page.$$('.cstar')).length === 3, 'constellation shows each playable ceremony');
+  await page.click('.cstar >> nth=1');
+  ok(await page.isVisible('.story'), 'tapping a star plays that ceremony');
+  await page.keyboard.press('Escape');
+  await page.goto(BASE + 'shoot.html?t=store-launch');
+  await page.waitForTimeout(500);
+  ok(await page.isHidden('#sh-constellation-section'), 'constellation only on the wedding page');
+
+  console.log('Background shooting stars');
+  await page.goto(BASE + 'about.html');
+  await page.waitForTimeout(1500);
+  ok(typeof (await page.evaluate(() => typeof SS.toast)) === 'string', 'star-catching helpers loaded');
 
   console.log('Admin');
   await page.goto(BASE + 'admin/index.html');

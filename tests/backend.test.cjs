@@ -15,7 +15,7 @@ function makeEnv(nowISO) {
     setValues(v) { v.forEach((row, i) => row.forEach((x, j) => { const R = this.r + i - 1; while (this.sh.data.length <= R) this.sh.data.push([]); this.sh.data[R][this.c + j - 1] = x; })); return this; }
     setValue(x) { return this.setValues([[x]]); }
     setFontWeight() { return this; } setBackground() { return this; } setFontColor() { return this; } setNumberFormat() { return this; }
-    setDataValidation() { return this; } insertCheckboxes() { return this; } setWrap() { return this; }
+    setDataValidation() { return this; } insertCheckboxes() { return this; } setWrap() { return this; } setNote() { return this; }
   }
   class Sheet {
     constructor(name) { this.name = name; this.data = []; }
@@ -90,14 +90,19 @@ ok(env.props.ADMIN_KEY && env.props.ADMIN_KEY.length > 30, 'creates an admin key
 
 console.log('Content');
 let res = call(env, 'doGet', { action: 'content' });
-ok(res.ok && res.reels.length === 19 && res.reels[0].id === 'DeefV69P6ei', 'serves reels from the Sheet');
+ok(res.ok && res.reels.length === 13 && res.reels[0].id === 'Dc6VVI4JGmp', 'serves the 13 reels that can play (6 Instagram-locked ones held back)');
+ok(env.sheets.Reels.data[1][9] === false && env.sheets.Reels.data[2][9] === true, 'locked reels are marked in the Sheet');
 ok(res.reels.find((r) => r.chapter === 'Pellikoduku').category === 'weddings', 'keeps wedding chapters');
 ok(res.packages.length === 19 && res.packages[0].features.length === 4 && res.packages[1].popular === true, 'serves packages with features');
 ok(res.jobs.length === 5 && res.jobs.every((j) => j.active === false), 'serves jobs (inactive by default)');
-env.sheets.Reels.data[1][5] = false; // hide first reel
+env.sheets.Reels.data[2][5] = false; // hide Engagement
 c.onEdit({ range: { getSheet: () => ({ getName: () => 'Reels' }) } });
 res = call(env, 'doGet', { action: 'content' });
-ok(res.reels.length === 18, 'editing the Sheet updates the site (cache cleared)');
+ok(res.reels.length === 12, 'editing the Sheet updates the site (cache cleared)');
+env.sheets.Reels.data[1][8] = 'assets/reels/featured.mp4'; // add a video file to a locked reel
+c.onEdit({ range: { getSheet: () => ({ getName: () => 'Reels' }) } });
+res = call(env, 'doGet', { action: 'content' });
+ok(res.reels.length === 13 && res.reels.some((r) => r.id === 'DeefV69P6ei' && r.video === 'assets/reels/featured.mp4'), 'adding a video file brings a locked reel back');
 
 console.log('Submissions');
 const films = { action: 'submit', type: 'films', data: { production: 'Instant — iPhone', shoot_type: 'Wedding / Function', package: 'Half Day', shoot_date: '2026-11-07', location: 'Vijayawada', name: 'Asha', phone: '+91 98765 43210', email: 'asha@example.com', consent: 'yes' }, meta: { seconds: 40, utm_source: 'instagram', page: '/enquiry.html' } };
@@ -110,6 +115,8 @@ res = call(env, 'doPost', films);
 ok(res.ref === 'FI-00001' && env.sheets.Enquiries.data.length === 2, 'double-submit returns the same reference, no duplicate row');
 res = call(env, 'doPost', { action: 'submit', type: 'labs', data: { name: 'Ravi', business: 'Acme', industry: 'Retail', email: 'r@example.com', phone: '9876543210', challenge: 'Grow', services: ['Websites', 'Social Media'], consent: 'yes' }, meta: { seconds: 30 } });
 ok(res.ref === 'LB-00001' && env.sheets.Enquiries.data[2][12] === 'Websites, Social Media', 'labs proposal with several services');
+res = call(env, 'doPost', { action: 'submit', type: 'labs', data: { name: 'Mini', business: 'B', industry: 'Retail', email: 'm@example.com', phone: '9000000001', challenge: 'Fun', consent: 'yes' }, meta: { seconds: 30, from: 'catch-game' } });
+ok(env.sheets.Enquiries.data[3][21] === 'mini game', 'enquiries from the mini game are tagged as such');
 res = call(env, 'doPost', { action: 'submit', type: 'labs', data: { name: 'Ravi' }, meta: { seconds: 30 } });
 ok(!res.ok && /required/.test(res.error), 'rejects missing fields');
 res = call(env, 'doPost', { action: 'submit', type: 'films', data: Object.assign({}, films.data, { shoot_date: '2026-11-01', phone: '9999999999' }), meta: { seconds: 30 } });
@@ -127,11 +134,13 @@ res = call(env, 'doPost', { action: 'admin', key: 'nope', op: 'overview' });
 ok(!res.ok && res.error === 'Wrong admin key', 'wrong key refused');
 const key = env.props.ADMIN_KEY;
 res = call(env, 'doPost', { action: 'admin', key, op: 'overview' });
-ok(res.ok && res.counts.enquiries === 2 && res.counts.films === 1 && res.counts.superUrgent === 1 && res.counts.careers === 1, 'overview counts');
+ok(res.ok && res.counts.enquiries === 3 && res.counts.films === 1 && res.counts.superUrgent === 1 && res.counts.careers === 1, 'overview counts');
 res = call(env, 'doPost', { action: 'admin', key, op: 'list', sheet: 'Enquiries' });
-ok(res.ok && res.rows[0].cells[0] === 'LB-00001', 'lists newest first');
+ok(res.ok && res.rows[0].cells[0] === 'LB-00002', 'lists newest first');
 res = call(env, 'doPost', { action: 'admin', key, op: 'save', sheet: 'Reels', values: { 'Instagram link or code': 'https://www.instagram.com/reel/NEW12345/', Category: 'sports', Title: 'Final', Visible: true, Featured: false, Order: 30 } });
 ok(res.ok && env.sheets.Reels.data.length === 21, 'admin adds a reel');
+res = call(env, 'doPost', { action: 'admin', key, op: 'save', sheet: 'Reels', values: { 'Video file URL (MP4, optional)': 'assets/reels/new.mp4', Category: 'store', Visible: true } });
+ok(res.ok, 'admin can add a reel from a video file alone');
 res = call(env, 'doPost', { action: 'admin', key, op: 'save', sheet: 'Enquiries', values: {} });
 ok(!res.ok, 'admin cannot overwrite enquiries');
 res = call(env, 'doPost', { action: 'admin', key, op: 'settings.save', values: { SUPER_URGENT_MAX_DAYS: 5, PRIORITY_MAX_DAYS: 3 } });

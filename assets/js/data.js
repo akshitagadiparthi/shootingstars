@@ -127,11 +127,16 @@ window.SS_DATA = (function () {
     }
   };
 
-  /* ---------- Reels (live from Instagram) ----------
+  /* ---------- Reels ----------
    * id        the code in the Instagram link: instagram.com/reel/<id>/
    * kind      'reel' or 'p' (photo post)
    * category  one of the keys in reelCategories
    * chapter   for weddings: the ceremony, used by the wedding constellation
+   * video     optional MP4 you host (e.g. 'assets/reels/haldi.mp4'). Plays silently
+   *           as you scroll and full screen with sound. Always works.
+   * poster    optional cover image for the video (e.g. 'assets/reels/haldi.jpg')
+   * embed     false = Instagram won't let this reel play outside its app
+   *           (checked 6 Nov 2026). It stays hidden until a video file is added.
    */
   const reelCategories = {
     latest: 'Latest',
@@ -149,26 +154,26 @@ window.SS_DATA = (function () {
   };
 
   const reels = [
-    { id: 'DeefV69P6ei', kind: 'reel', category: 'featured', title: 'Featured reel', featured: true },
+    { id: 'DeefV69P6ei', embed: false, kind: 'reel', category: 'featured', title: 'Featured reel', featured: true },
     { id: 'Dc6VVI4JGmp', kind: 'reel', category: 'weddings', chapter: 'Engagement', title: 'Engagement', featured: true },
-    { id: 'Dc7pyMAJFdG', kind: 'reel', category: 'weddings', chapter: 'Bride to be', title: 'Bride to be' },
-    { id: 'Dc6WiDMpMnn', kind: 'reel', category: 'weddings', chapter: 'Pasupu', title: 'Pasupu' },
+    { id: 'Dc7pyMAJFdG', embed: false, kind: 'reel', category: 'weddings', chapter: 'Bride to be', title: 'Bride to be' },
+    { id: 'Dc6WiDMpMnn', embed: false, kind: 'reel', category: 'weddings', chapter: 'Pasupu', title: 'Pasupu' },
     { id: 'DdEelL3pEOE', kind: 'reel', category: 'weddings', chapter: 'Haldi', title: 'Haldi', featured: true },
     { id: 'DVU5kgLid40', kind: 'reel', category: 'weddings', chapter: 'Haldi', title: 'Haldi' },
     { id: 'DdG7Y3rJE0S', kind: 'reel', category: 'weddings', chapter: 'Mehendi', title: 'Mehendi', featured: true },
-    { id: 'DdBMfjGpCKf', kind: 'reel', category: 'weddings', chapter: 'Sangeeth', title: 'Sangeeth', featured: true },
+    { id: 'DdBMfjGpCKf', embed: false, kind: 'reel', category: 'weddings', chapter: 'Sangeeth', title: 'Sangeeth', featured: true },
     { id: 'Dc-h4-kJ2fp', kind: 'reel', category: 'weddings', chapter: 'Sangeeth', title: 'Sangeeth' },
     { id: 'DdLTdmYJFEd', kind: 'reel', category: 'weddings', chapter: 'Pellikoduku', title: 'Pellikoduku', featured: true },
     { id: 'DaUmKTFylJp', kind: 'reel', category: 'sports', title: 'Sporting event', featured: true },
-    { id: 'DetXGpUvQKu', kind: 'reel', category: 'sports', title: 'Sporting event' },
+    { id: 'DetXGpUvQKu', embed: false, kind: 'reel', category: 'sports', title: 'Sporting event' },
     { id: 'DSCLLhLkyjB', kind: 'reel', category: 'sports', title: 'Sporting event' },
     { id: 'DUznJNIjxK5', kind: 'reel', category: 'store', title: 'Store launch', featured: true },
     { id: 'DUupmqJE8yE', kind: 'reel', category: 'store', title: 'Store launch' },
     { id: 'DWWQ69ykytz', kind: 'reel', category: 'brand', title: 'Model shoot', featured: true },
-    { id: 'DUaqGPkk5_a', kind: 'reel', category: 'automotive', title: 'Car shoot', featured: true },
+    { id: 'DUaqGPkk5_a', embed: false, kind: 'reel', category: 'automotive', title: 'Car shoot', featured: true },
     { id: 'DaXpjSng9n4', kind: 'reel', category: 'movies', title: 'Movie promotion', featured: true },
     { id: 'DerXr-dgfj-', kind: 'p', category: 'photography', title: 'Photography', featured: true }
-  ].map((r, i) => ({ order: i + 1, visible: true, featured: false, ...r }));
+  ].map((r, i) => ({ order: i + 1, visible: true, featured: false, video: '', poster: '', ...r }));
 
   // The order the wedding constellation is drawn in.
   const weddingChapters = ['Engagement', 'Bride to be', 'Pasupu', 'Haldi', 'Mehendi', 'Sangeeth', 'Pellikoduku'];

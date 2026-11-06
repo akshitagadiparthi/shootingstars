@@ -78,7 +78,7 @@
       const res = await fetch(C.API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // a "simple" request: no CORS preflight
-        body: JSON.stringify({ action: 'submit', type, data, meta: Object.assign({ page: location.pathname, seconds: Math.round((Date.now() - opened) / 1000) }, SS.source()) })
+        body: JSON.stringify({ action: 'submit', type, data, meta: Object.assign({ page: location.pathname, from: SS.param('from') || '', seconds: Math.round((Date.now() - opened) / 1000) }, SS.source()) })
       });
       const j = await res.json();
       if (!j.ok) throw new Error(j.error || 'Something went wrong');
@@ -118,10 +118,6 @@
     const q = new URLSearchParams(location.search);
     q.getAll('service').forEach((s) => SS.$$('input[name="services"]', labs).forEach((c) => { if (c.value === s) c.checked = true; }));
     setSelect(labs.querySelector('[name="industry"]'), q.get('industry'));
-    if (q.get('from') === 'reach-game') {
-      const t = labs.querySelector('[name="challenge"]');
-      if (t && !t.value) t.value = `From the Reach Game: my ${q.get('moment') || 'launch'} reached ${q.get('level') || 'the stars'}. I'd like to talk about making it real.`;
-    }
     bind(labs, 'labs');
   }
 
@@ -137,10 +133,6 @@
     setSelect(films.querySelector('[name="package"]'), q.get('package'));
     const mode = q.get('mode');
     if (mode) SS.$$('input[name="production"]', films).forEach((r) => { if (r.value.toLowerCase().startsWith(mode.toLowerCase())) r.checked = true; });
-    if (q.get('from') === 'reach-game') {
-      const t = films.querySelector('[name="notes"]');
-      if (t && !t.value) t.value = `From the Reach Game: my ${q.get('moment') || 'moment'} reached ${q.get('level') || 'the stars'}.`;
-    }
 
     let settings = window.SS_DATA.settings;
     SS.content().then((c) => { settings = c.settings || settings; updatePriority(); });

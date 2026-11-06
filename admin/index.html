@@ -224,7 +224,7 @@
       view.innerHTML = `
         <div class="card stack">
           <h2 class="h3">Add a reel</h2>
-          <p class="muted small">Paste any Instagram reel or post link. It appears on the website within a minute.</p>
+          <p class="muted small">Paste the Instagram link. It appears on the website within a minute. If the reel shows “Watch on Instagram” instead of playing, Instagram doesn’t allow it outside its app (usually licensed music). Add the video file link below and it will play on the site.</p>
           <form class="form" id="reel-add">
             <label class="field"><span>Instagram link *</span><input type="url" name="link" required placeholder="https://www.instagram.com/reel/…"></label>
             <div class="two">
@@ -233,9 +233,11 @@
             </div>
             <div class="two">
               <label class="field"><span>Wedding chapter (for the constellation)</span><select name="chapter"><option value="">—</option>${CHAPTERS.map((c) => `<option>${c}</option>`).join('')}</select></label>
-              <label class="field"><span>Poster image URL (optional)</span><input type="url" name="poster" placeholder="https://"></label>
+              <label class="field"><span>Poster image URL (optional)</span><input type="text" name="poster" placeholder="https://… or assets/reels/haldi.jpg"></label>
             </div>
+            <label class="field"><span>Video file URL (MP4, optional)</span><input type="text" name="video" placeholder="https://…/haldi.mp4 or assets/reels/haldi.mp4"></label>
             <label class="check"><input type="checkbox" name="featured"><span>Featured (home page and rails)</span></label>
+            <label class="check"><input type="checkbox" name="embed" checked><span>Plays in Instagram’s player (untick if it says “Watch on Instagram”)</span></label>
             <button class="btn btn-primary" type="submit" style="align-self:flex-start">Add reel</button>
           </form>
         </div>
@@ -247,6 +249,8 @@
           <div class="row">
             <label class="toggle"><input type="checkbox" data-f="Visible" ${yes(get(r, 'Visible')) ? 'checked' : ''}>Visible</label>
             <label class="toggle"><input type="checkbox" data-f="Featured" ${yes(get(r, 'Featured')) ? 'checked' : ''}>Featured</label>
+            <label class="toggle"><input type="checkbox" data-f="Plays in Instagram player" ${get(r, 'Plays in Instagram player') === '' || get(r, 'Plays in Instagram player') === undefined || yes(get(r, 'Plays in Instagram player')) ? 'checked' : ''}>Plays in IG player</label>
+            ${!get(r, 'Video file URL (MP4, optional)') && get(r, 'Plays in Instagram player') !== undefined && get(r, 'Plays in Instagram player') !== '' && !yes(get(r, 'Plays in Instagram player')) ? '<span class="pill late">Hidden: needs a video file</span>' : ''}
             <button class="btn btn-ghost btn-sm" data-del type="button">Remove</button>
           </div>
         </div>`).join('');
@@ -266,7 +270,7 @@
       $('#reel-add').addEventListener('submit', async (e) => {
         e.preventDefault();
         const f = e.target;
-        const values = { 'Instagram link or code': f.link.value.trim(), Category: f.cat.value, Title: f.title.value.trim(), 'Chapter (weddings)': f.chapter.value, Featured: f.featured.checked, Visible: true, Order: j.rows.length + 1, 'Poster image URL (optional)': f.poster.value.trim() };
+        const values = { 'Instagram link or code': f.link.value.trim(), Category: f.cat.value, Title: f.title.value.trim(), 'Chapter (weddings)': f.chapter.value, Featured: f.featured.checked, Visible: true, Order: j.rows.length + 1, 'Poster image URL (optional)': f.poster.value.trim(), 'Video file URL (MP4, optional)': f.video.value.trim(), 'Plays in Instagram player': f.embed.checked };
         try { await call('save', { sheet: 'Reels', values }); reels(); } catch (x) { alert(x.message); }
       });
     } catch (e) { fail(e); }

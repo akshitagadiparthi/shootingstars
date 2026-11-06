@@ -174,7 +174,11 @@
   const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' }) : null;
   SS.reveal = (root = document) => SS.$$('.reveal:not(.in)', root).forEach((el) => (io ? io.observe(el) : el.classList.add('in')));
 
-  /* ---------- the night sky ---------- */
+  /* ---------- the night sky ----------
+   * Three layers of twinkling stars that drift with scroll, plus a steady
+   * stream of shooting stars (some silver, some softly coloured) and the
+   * occasional little shower. Visitors can tap a shooting star to catch it.
+   */
   const sky = document.createElement('canvas');
   sky.id = 'ss-sky'; sky.setAttribute('aria-hidden', 'true');
   const fx = document.createElement('canvas');
@@ -183,50 +187,69 @@
   document.body.append(fx);
   const sctx = sky.getContext('2d');
   const fctx = fx.getContext('2d');
-  let W = 0, H = 0, DPR = 1, stars = [], meteors = [], particles = [], nextMeteor = 0, running = false;
+  const TINTS = ['255,255,255', '255,255,255', '255,255,255', '169,150,255', '124,203,255', '255,148,184', '130,230,198'];
+  let W = 0, H = 0, DPR = 1, stars = [], meteors = [], particles = [], nextMeteor = 0, nextShower = 0, running = false, scrollY0 = window.scrollY;
 
   function size() {
     DPR = Math.min(window.devicePixelRatio || 1, 2);
     W = document.documentElement.clientWidth; H = window.innerHeight;
     [sky, fx].forEach((c) => { c.width = W * DPR; c.height = H * DPR; c.style.width = '100%'; c.style.height = '100%'; });
     sctx.setTransform(DPR, 0, 0, DPR, 0, 0); fctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    const n = Math.round((W * H) / 7000);
-    stars = Array.from({ length: n }, () => ({ x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.1 + 0.25, p: Math.random() * Math.PI * 2, s: 0.4 + Math.random() * 1.2 }));
+    const n = Math.round((W * H) / 5200);
+    stars = Array.from({ length: n }, () => {
+      const layer = Math.random() < 0.6 ? 0 : Math.random() < 0.75 ? 1 : 2; // far, mid, near
+      const tint = Math.random() < 0.12 ? TINTS[3 + Math.floor(Math.random() * 4)] : '233,236,241';
+      return { x: Math.random() * W, y: Math.random() * H, r: [0.5, 0.9, 1.4][layer] * (0.7 + Math.random() * 0.6), layer, tint, p: Math.random() * Math.PI * 2, s: 0.4 + Math.random() * 1.2, sparkle: layer === 2 && Math.random() < 0.35 };
+    });
     if (reduce) drawSky(0);
   }
 
-  function spawnMeteor(fast) {
-    const startX = W * (0.35 + Math.random() * 0.75);
-    const startY = -20 + Math.random() * H * 0.35;
-    const speed = fast ? 14 + Math.random() * 8 : 7 + Math.random() * 5;
-    const ang = Math.PI * (0.78 + Math.random() * 0.06); // down-left
-    meteors.push({ x: startX, y: startY, vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed, len: 120 + Math.random() * 160, life: 0, max: 70 + Math.random() * 40 });
+  function spawnMeteor(opts = {}) {
+    const fast = !!opts.fast;
+    const startX = opts.x !== undefined ? opts.x : W * (0.25 + Math.random() * 0.9);
+    const startY = opts.y !== undefined ? opts.y : -30 + Math.random() * H * 0.45;
+    const speed = fast ? 13 + Math.random() * 8 : 5 + Math.random() * 6;
+    const ang = Math.PI * (0.74 + Math.random() * 0.1); // heading down-left
+    const tint = opts.tint || TINTS[Math.floor(Math.random() * TINTS.length)];
+    const big = Math.random() < 0.18;
+    meteors.push({ x: startX, y: startY, vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed, len: (big ? 220 : 110) + Math.random() * 150, w: big ? 2.4 : 1.5, tint, life: 0, max: 80 + Math.random() * 50 });
+    if (meteors.length > 40) meteors.shift();
+  }
+
+  function star4(ctx, x, y, r) {
+    ctx.beginPath();
+    ctx.moveTo(x, y - r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.quadraticCurveTo(x, y, x, y + r);
+    ctx.quadraticCurveTo(x, y, x - r, y); ctx.quadraticCurveTo(x, y, x, y - r); ctx.fill();
   }
 
   function drawSky(t) {
     sctx.clearRect(0, 0, W, H);
+    const sy = window.scrollY;
     for (const s of stars) {
-      const a = reduce ? 0.6 : 0.35 + 0.65 * Math.abs(Math.sin(s.p + t * 0.0006 * s.s));
-      sctx.globalAlpha = a * 0.85;
-      sctx.fillStyle = '#e9ecf1';
-      sctx.beginPath(); sctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); sctx.fill();
+      const a = reduce ? 0.6 : 0.3 + 0.7 * Math.abs(Math.sin(s.p + t * 0.0006 * s.s));
+      // parallax: nearer stars drift further as you scroll
+      let y = (s.y - sy * [0.02, 0.06, 0.12][s.layer]) % H; if (y < 0) y += H;
+      sctx.fillStyle = `rgba(${s.tint},${a * [0.6, 0.8, 0.95][s.layer]})`;
+      if (s.sparkle) star4(sctx, s.x, y, s.r * 2.6 * (0.6 + a * 0.6));
+      else { sctx.beginPath(); sctx.arc(s.x, y, s.r, 0, Math.PI * 2); sctx.fill(); }
     }
-    sctx.globalAlpha = 1;
     for (let i = meteors.length - 1; i >= 0; i--) {
       const m = meteors[i];
       m.x += m.vx; m.y += m.vy; m.life++;
-      const fade = Math.min(1, m.life / 10) * Math.max(0, 1 - m.life / m.max);
-      const tx = m.x - (m.vx / Math.hypot(m.vx, m.vy)) * m.len;
-      const ty = m.y - (m.vy / Math.hypot(m.vx, m.vy)) * m.len;
+      const fade = Math.min(1, m.life / 8) * Math.max(0, 1 - m.life / m.max);
+      const sp = Math.hypot(m.vx, m.vy);
+      const tx = m.x - (m.vx / sp) * m.len, ty = m.y - (m.vy / sp) * m.len;
       const g = sctx.createLinearGradient(m.x, m.y, tx, ty);
       g.addColorStop(0, `rgba(255,255,255,${0.95 * fade})`);
-      g.addColorStop(0.2, `rgba(221,225,231,${0.55 * fade})`);
-      g.addColorStop(1, 'rgba(221,225,231,0)');
-      sctx.strokeStyle = g; sctx.lineWidth = 1.6; sctx.lineCap = 'round';
+      g.addColorStop(0.12, `rgba(${m.tint},${0.75 * fade})`);
+      g.addColorStop(1, `rgba(${m.tint},0)`);
+      sctx.strokeStyle = g; sctx.lineWidth = m.w; sctx.lineCap = 'round';
       sctx.beginPath(); sctx.moveTo(m.x, m.y); sctx.lineTo(tx, ty); sctx.stroke();
       sctx.fillStyle = `rgba(255,255,255,${fade})`;
-      sctx.beginPath(); sctx.arc(m.x, m.y, 1.8, 0, Math.PI * 2); sctx.fill();
-      if (m.life > m.max || m.x < -300 || m.y > H + 300) meteors.splice(i, 1);
+      sctx.shadowColor = `rgba(${m.tint},${fade})`; sctx.shadowBlur = 12;
+      sctx.beginPath(); sctx.arc(m.x, m.y, m.w * 1.1, 0, Math.PI * 2); sctx.fill();
+      sctx.shadowBlur = 0;
+      if (m.life > m.max || m.x < -400 || m.y > H + 400) meteors.splice(i, 1);
     }
   }
 
@@ -236,11 +259,14 @@
       const p = particles[i];
       p.x += p.vx; p.y += p.vy; p.vx *= p.drag; p.vy = p.vy * p.drag + p.g; p.life++;
       const a = Math.max(0, 1 - p.life / p.max);
+      const c = p.tint || '240,242,246';
       if (p.line) {
-        fctx.strokeStyle = `rgba(235,238,243,${a})`; fctx.lineWidth = p.r; fctx.lineCap = 'round';
+        fctx.strokeStyle = `rgba(${c},${a})`; fctx.lineWidth = p.r; fctx.lineCap = 'round';
         fctx.beginPath(); fctx.moveTo(p.x, p.y); fctx.lineTo(p.x - p.vx * 4, p.y - p.vy * 4); fctx.stroke();
+      } else if (p.star) {
+        fctx.fillStyle = `rgba(${c},${a})`; star4(fctx, p.x, p.y, p.r * 2.2);
       } else {
-        fctx.fillStyle = `rgba(240,242,246,${a})`;
+        fctx.fillStyle = `rgba(${c},${a})`;
         fctx.beginPath(); fctx.arc(p.x, p.y, p.r * a + 0.2, 0, Math.PI * 2); fctx.fill();
       }
       if (p.life >= p.max) particles.splice(i, 1);
@@ -249,7 +275,11 @@
 
   function loop(t) {
     if (document.hidden) { running = false; return; }
-    if (t > nextMeteor) { spawnMeteor(false); nextMeteor = t + 2600 + Math.random() * 4200; }
+    if (t > nextMeteor) { spawnMeteor(); nextMeteor = t + 450 + Math.random() * 1300; }
+    if (t > nextShower) { // every so often, a little cluster
+      if (nextShower) { const n = 3 + Math.floor(Math.random() * 3); for (let k = 0; k < n; k++) setTimeout(() => spawnMeteor({ fast: true }), k * 140); }
+      nextShower = t + 9000 + Math.random() * 9000;
+    }
     drawSky(t);
     drawFx();
     requestAnimationFrame(loop);
@@ -258,14 +288,17 @@
   size();
   window.addEventListener('resize', () => { clearTimeout(size.t); size.t = setTimeout(size, 150); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) start(); });
+  // a few stars already on their way when the page opens
+  if (!reduce) for (let k = 0; k < 3; k++) spawnMeteor();
   start();
 
-  // A burst of stars from a point: used when a form is sent.
-  SS.burst = function (x, y, n = 60) {
+  // A burst of stars from a point: used when a form is sent or a star is caught.
+  SS.burst = function (x, y, n = 60, tint) {
     if (reduce) return;
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2, sp = 3 + Math.random() * 9;
-      particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, drag: 0.94, g: 0.06, r: 1.4 + Math.random() * 1.4, life: 0, max: 50 + Math.random() * 40, line: Math.random() < 0.5 });
+      const t = tint || TINTS[Math.floor(Math.random() * TINTS.length)];
+      particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, drag: 0.94, g: 0.06, r: 1.4 + Math.random() * 1.4, life: 0, max: 50 + Math.random() * 40, line: Math.random() < 0.45, star: Math.random() < 0.25, tint: t });
     }
     start();
   };
@@ -275,20 +308,94 @@
   SS.shower = function () {
     if (reduce) return;
     let k = 0;
-    const iv = setInterval(() => { spawnMeteor(true); if (++k > 26) clearInterval(iv); }, 90);
+    const iv = setInterval(() => { spawnMeteor({ fast: true }); if (++k > 30) clearInterval(iv); }, 80);
     start();
   };
 
-  // Stardust that follows the pointer on desktop.
+  // Stardust that follows the pointer on desktop, in soft colours.
   if (fine && !reduce) {
-    let last = 0;
+    let last = 0, k = 0;
     window.addEventListener('pointermove', (e) => {
       const now = performance.now();
-      if (now - last < 28) return;
+      if (now - last < 24) return;
       last = now;
-      particles.push({ x: e.clientX, y: e.clientY, vx: (Math.random() - 0.5) * 0.6, vy: 0.2 + Math.random() * 0.6, drag: 0.98, g: 0.01, r: 1 + Math.random() * 1.3, life: 0, max: 34 + Math.random() * 20 });
-      if (particles.length > 220) particles.splice(0, particles.length - 220);
+      particles.push({ x: e.clientX, y: e.clientY, vx: (Math.random() - 0.5) * 0.6, vy: 0.2 + Math.random() * 0.6, drag: 0.98, g: 0.01, r: 1 + Math.random() * 1.3, life: 0, max: 34 + Math.random() * 20, star: (k++ % 7) === 0, tint: TINTS[k % TINTS.length] });
+      if (particles.length > 260) particles.splice(0, particles.length - 260);
     }, { passive: true });
+  }
+
+  /* ---------- little messages ---------- */
+  let toastEl = null, toastTimer = 0;
+  SS.toast = function (html, ms = 3200) {
+    if (!toastEl) { toastEl = document.createElement('div'); toastEl.className = 'toast'; toastEl.setAttribute('role', 'status'); document.body.append(toastEl); }
+    toastEl.innerHTML = SS.star + '<span>' + html + '</span>';
+    requestAnimationFrame(() => toastEl.classList.add('show'));
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
+  };
+
+  /* ---------- catch a shooting star, anywhere on the site ---------- */
+  const WISH_AT = 3;
+  let caught = 0;
+  try { caught = Number(sessionStorage.getItem('ss_caught') || 0); } catch (e) { /* ignore */ }
+  let badge = null;
+  function showBadge() {
+    if (!badge) {
+      badge = document.createElement('button');
+      badge.type = 'button'; badge.className = 'star-badge';
+      badge.setAttribute('aria-label', 'Shooting stars you have caught');
+      badge.addEventListener('click', () => SS.toast(caught >= WISH_AT ? 'You’ve made your wish. Keep catching!' : `Tap a shooting star to catch it. ${WISH_AT - caught} more for a wish.`));
+      document.body.append(badge);
+    }
+    badge.innerHTML = SS.star + `<span>${caught} caught</span>`;
+    badge.classList.remove('pop'); void badge.offsetWidth; badge.classList.add('pop');
+  }
+  if (caught) showBadge();
+
+  function wish() {
+    SS.shower();
+    const w = document.createElement('div');
+    w.className = 'wish'; w.setAttribute('role', 'dialog'); w.setAttribute('aria-modal', 'true'); w.setAttribute('aria-label', 'Make a wish');
+    w.innerHTML = `<div class="card"><span class="eyebrow accent-fun">${SS.star} ${WISH_AT} shooting stars caught</span><h2 class="h2">Make a <span class="chrome">wish.</span></h2><p class="lead">A launch that stops the scroll? A wedding film you’ll watch every year? Tell us. Wishes are what we shoot.</p><div class="row" style="justify-content:center"><a class="btn btn-primary" href="start.html?from=wish">Make my wish ↗</a><button class="btn btn-ghost" type="button" data-close>Keep stargazing</button></div></div>`;
+    document.body.append(w);
+    const close = () => w.remove();
+    w.addEventListener('click', (e) => { if (e.target === w || e.target.closest('[data-close]')) close(); });
+    document.addEventListener('keydown', function k(e) { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', k); } });
+    w.querySelector('.btn-primary').focus();
+  }
+
+  function distToSegment(px, py, ax, ay, bx, by) {
+    const dx = bx - ax, dy = by - ay, l = dx * dx + dy * dy || 1;
+    const u = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / l));
+    return Math.hypot(px - (ax + u * dx), py - (ay + u * dy));
+  }
+  if (!reduce) {
+    document.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('a, button, input, select, textarea, label, iframe, video, .game, .story, .lightbox, .wish, [role="dialog"], .reel-card')) return;
+      let best = null, bestD = 1e9;
+      for (const m of meteors) {
+        const sp = Math.hypot(m.vx, m.vy);
+        const tx = m.x - (m.vx / sp) * Math.min(m.len, 90), ty = m.y - (m.vy / sp) * Math.min(m.len, 90);
+        const d = distToSegment(e.clientX, e.clientY, m.x, m.y, tx, ty);
+        if (d < bestD) { bestD = d; best = m; }
+      }
+      if (!best || bestD > 42) return;
+      meteors.splice(meteors.indexOf(best), 1);
+      SS.burst(best.x, best.y, 46, best.tint === '255,255,255' ? null : best.tint);
+      caught++;
+      try { sessionStorage.setItem('ss_caught', String(caught)); } catch (x) { /* ignore */ }
+      showBadge();
+      if (navigator.vibrate) navigator.vibrate(12);
+      if (caught === WISH_AT) setTimeout(wish, 450);
+      else if (caught < WISH_AT) SS.toast(`You caught a shooting star! ${WISH_AT - caught} more and you get a wish.`);
+      else SS.toast(['Another one!', 'Star catcher!', 'Nice catch!', 'You’re a natural.'][caught % 4]);
+    });
+    // a gentle hint, once per visit
+    try {
+      if (!sessionStorage.getItem('ss_hint') && !caught) {
+        setTimeout(() => { if (SS._game && SS._game.state().playing) return; SS.toast(fine ? 'Psst… you can click the shooting stars to catch them.' : 'Psst… tap a shooting star to catch it.', 4500); try { sessionStorage.setItem('ss_hint', '1'); } catch (e) { /* ignore */ } }, 7000);
+      }
+    } catch (e) { /* ignore */ }
   }
 
   // Easter egg: type "wish" anywhere (outside a form) for a meteor shower.
@@ -298,6 +405,19 @@
     typed = (typed + (e.key || '')).slice(-4).toLowerCase();
     if (typed === 'wish') { SS.shower(); typed = ''; }
   });
+
+  // Cards tilt gently towards the pointer on desktop.
+  if (fine && !reduce) {
+    document.addEventListener('pointermove', (e) => {
+      const card = e.target.closest && e.target.closest('.card-link, .tilt');
+      SS.$$('.tilting').forEach((c) => { if (c !== card) { c.classList.remove('tilting'); c.style.transform = ''; } });
+      if (!card) return;
+      const r = card.getBoundingClientRect();
+      const rx = ((e.clientY - r.top) / r.height - 0.5) * -5, ry = ((e.clientX - r.left) / r.width - 0.5) * 6;
+      card.classList.add('tilting');
+      card.style.transform = `perspective(900px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) translateY(-3px)`;
+    }, { passive: true });
+  }
 
   // Scroll meteor: one star travels down the edge of the page as you read.
   const sm = document.createElement('div');
@@ -315,31 +435,6 @@
   }
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
-
-  /* ---------- reel lightbox ---------- */
-  SS.openReel = function (reelOrList) {
-    const list = Array.isArray(reelOrList) ? reelOrList : [reelOrList];
-    const reel = list[0];
-    const opener = document.activeElement;
-    const box = document.createElement('div');
-    box.className = 'lightbox';
-    box.setAttribute('role', 'dialog');
-    box.setAttribute('aria-modal', 'true');
-    box.setAttribute('aria-label', reel.title || 'Reel');
-    box.innerHTML = `<div class="box"><header><div><div class="eyebrow">${SS.esc((D.reelCategories[reel.category] || '').toUpperCase())}${list.length > 1 ? ' · ' + list.length + ' REELS' : ''}</div><strong style="display:block;margin-top:4px;font-size:24px;font-style:italic">${SS.esc(reel.chapter || reel.title || '')}</strong></div><button class="close" type="button" aria-label="Close">✕</button></header>${list.map(() => '<div class="reel-frame" style="margin-bottom:12px"></div>').join('')}</div>`;
-    document.body.append(box);
-    document.body.style.overflow = 'hidden';
-    const close = () => { box.remove(); document.body.style.overflow = ''; document.removeEventListener('keydown', onKey); if (opener && opener.focus) opener.focus(); };
-    const onKey = (e) => {
-      if (e.key === 'Escape') close();
-      if (e.key === 'Tab') setTimeout(() => { if (!box.contains(document.activeElement)) box.querySelector('.close').focus(); }, 0); // keep focus inside
-    };
-    document.addEventListener('keydown', onKey);
-    box.addEventListener('click', (e) => { if (e.target === box) close(); });
-    box.querySelector('.close').addEventListener('click', close);
-    box.querySelector('.close').focus();
-    if (SS.embed) SS.$$('.reel-frame', box).forEach((f, i) => SS.embed(f, list[i]));
-  };
 
   document.addEventListener('DOMContentLoaded', () => SS.reveal());
   if (document.readyState !== 'loading') SS.reveal();

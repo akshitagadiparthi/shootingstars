@@ -1,6 +1,6 @@
 # Shooting Stars Media — website
 
-Black, silver and the logo's own typeface. Real reels playing live from Instagram. Every enquiry lands in a Google Sheet.
+Black night sky, silver light and a few soft colours. Headlines use the logo's typeface; body text uses a clean sans-serif. Your reels play right on the page. Every enquiry lands in a Google Sheet.
 
 - **Website:** plain HTML, CSS and JavaScript. No build step and no framework, so it can be hosted anywhere.
 - **Backend:** one Google Apps Script attached to one Google Sheet. It is free and needs no server.
@@ -11,14 +11,14 @@ Black, silver and the logo's own typeface. Real reels playing live from Instagra
 ## 1. What's in the box
 
 ```
-index.html            Home: hero reel, divisions, reels rail, wedding constellation, Reach Game
+index.html            Home: hero reel, divisions, reels rail + full-screen viewer, "Catch a shooting star" game
 labs.html             Marketing Labs
-films.html            Shooting Stars Films: reels wall, packages, constellation, occasions
+films.html            Shooting Stars Films: reels wall, packages, occasions
 work.html             Our Work: all reels + example projects
 service.html          One Labs service      (?s=brand-identity, websites, …)
 industries.html       Industries list
 industry.html         One industry          (?i=healthcare, startups-and-emerging-businesses, …)
-shoot.html            One shoot occasion    (?t=weddings-and-functions, sports-leagues, …)
+shoot.html            One shoot occasion    (?t=weddings-and-functions has the wedding constellation)
 project.html          One example project   (?p=…)
 start.html            Start a project (choose division)
 proposal.html         Labs proposal form           → Sheet tab "Enquiries"
@@ -31,18 +31,19 @@ admin/index.html      Admin dashboard (not indexed by search engines)
 
 assets/js/config.js   ← the only file you must edit (API URL, WhatsApp, email)
 assets/js/data.js     All site copy + default reels/packages/jobs (used until the Sheet is connected)
-assets/js/site.js     Header, footer, night sky, shooting stars, live content loader
-assets/js/reels.js    Instagram embeds, reels wall, rails, wedding constellation
-assets/js/game.js     The Reach Game ("Launch your star")
+assets/js/site.js     Header, footer, night sky, shooting stars (catch them!), live content loader
+assets/js/reels.js    Reel players (video files + Instagram), full-screen viewer, rails, wedding constellation
+assets/js/game.js     Mini game: "Catch a shooting star"
 assets/js/forms.js    All four forms
 assets/js/pages.js    Page-specific rendering
 assets/css/site.css   All styles
-assets/fonts/         Bodoni Moda (self-hosted, SIL Open Font Licence)
+assets/fonts/         Bodoni Moda (headlines) + Manrope (text), self-hosted, SIL Open Font Licence
+assets/reels/         Put your reel video files here (see section 6)
 assets/brand/         The rebuilt logo, icons, Instagram avatar, share image
 
 backend/apps-script/  Code.gs + appsscript.json → paste into Google Apps Script
 tests/                Automated checks (backend rules, forms, game, admin)
-tools/                Scripts that regenerate the logo files and icons
+tools/                Logo/icon scripts + prepare-reels.sh (makes web-ready reel videos)
 ```
 
 ## 2. Run it on your computer
@@ -102,8 +103,9 @@ All of these update live, with no code change and no redeploy. Changes appear wi
 | Add a reel | Admin → Reels → paste the Instagram link → pick a category. Or add a row in the **Reels** tab. |
 | Hide a reel | Untick *Visible* (admin or Sheet) |
 | Feature a reel on the home page | Tick *Featured* |
-| Add a wedding ceremony to the constellation | Category `weddings` + fill *Chapter* (Engagement, Bride to be, Pasupu, Haldi, Mehendi, Sangeeth, Pellikoduku, or a new one) |
-| Use your own cover image for a reel | Put an image URL in *Poster image URL*. Visitors see your frame and tap to play. |
+| Add a wedding ceremony to the constellation (wedding shoots page) | Category `weddings` + fill *Chapter* (Engagement, Bride to be, Pasupu, Haldi, Mehendi, Sangeeth, Pellikoduku, or a new one) |
+| Make a blocked reel play | Add its video file in *Video file URL* (see section 6) |
+| Use your own cover image for a reel | Put an image path or URL in *Poster image URL* |
 | Change a package or price | **Packages** tab (one row per package; features one per line) |
 | Publish a job opening | Admin → Job openings, or the **Jobs** tab → tick *Active* |
 | Change priority days or emails | Admin → Settings, or the **Settings** tab |
@@ -112,7 +114,24 @@ Reel categories: `featured, weddings, sports, store, brand, automotive, movies, 
 
 Text on the pages (headlines and descriptions) lives in the HTML files and in `assets/js/data.js`.
 
-## 6. Optional: newest Instagram posts appear automatically
+## 6. Reels: making every reel play on the site
+
+Every reel plays in one of two ways:
+
+1. **Instagram's player.** This works for most reels: they play right on the card, with no trip to Instagram. Some reels are blocked by Instagram: they only show "Watch on Instagram" because of licensed music or the owner's settings. When I checked on 6 Nov 2026, these six were blocked: *Featured reel (DeefV69P6ei), Bride to be, Pasupu, Sangeeth (DdBMfjGpCKf), Sporting event (DetXGpUvQKu), Car*. They are hidden from the site (column **Plays in Instagram player** is unticked) until they have a video file.
+2. **Your own video file (recommended for your best reels).** It plays silently as people scroll, then full screen with sound when tapped. It always works, loads fast and has no Instagram branding around it.
+
+To add video files:
+```bash
+./tools/prepare-reels.sh ~/Exports/haldi.mp4 ~/Exports/sangeeth.mp4   # needs ffmpeg
+```
+This writes small web-ready files (`assets/reels/haldi.mp4` plus `haldi.jpg` as the cover) into the site. Commit them, then put `assets/reels/haldi.mp4` in the reel's **Video file URL** column and `assets/reels/haldi.jpg` in **Poster image URL**. The reel appears within a minute. If you'd rather not keep videos in Git, any public MP4 link works, for example Cloudinary or Bunny Stream.
+
+> Music: a reel that uses a song from Instagram's music library is licensed for Instagram only. For the website, use a version with music you have rights to (royalty-free or commissioned), or keep it muted.
+
+**Full-screen viewer:** "▶ Watch them all", the ⤢ button on any card and the wedding constellation all open a story-style viewer. Swipe, tap the sides or use the arrow keys to move between reels. Video files advance automatically.
+
+## 6b. Optional: newest Instagram posts appear automatically
 
 Without this, the site shows the reels listed in the Sheet, which is fully under your control. With it, your 6 newest posts also appear at the top, labelled *Latest*.
 
@@ -125,7 +144,7 @@ The token is refreshed automatically every week.
 ## 7. Admin
 
 Go to `yourdomain.com/admin` and sign in with the admin key. It has:
-- **Overview:** today's enquiries, how many are past their callback deadline, Super Urgent shoots, and where enquiries come from (Instagram, Google, the Reach Game, …).
+- **Overview:** today's enquiries, how many are past their callback deadline, Super Urgent shoots, and where enquiries come from (Instagram, Google, the mini game, a caught-star wish, …).
 - **Enquiries, Job applications, Freelance network:** search, full details, and **Download CSV**.
 - **Reels:** add, hide, feature or remove.
 - **Job openings:** add or edit, and switch them on or off.
@@ -135,22 +154,22 @@ To change the key, use **Shooting Stars → Make a new admin key** in the Sheet.
 
 ## 8. The fun parts (and how to tune them)
 
-- **Night sky:** the twinkling stars and the shooting stars that cross every page are in `site.js` (`spawnMeteor`).
-- **Stardust cursor:** on desktop, a faint trail follows the pointer.
-- **Scroll meteor:** a star on the right edge travels down as you read.
-- **Logo intro:** the logo is "written" by a passing star, once per visit.
-- **Star burst** when a form is sent, or when a constellation star is tapped.
-- **Wedding constellation:** each ceremony is a star; tap one to play its reel.
-- **The Reach Game:** "Launch your star". Visitors pick a moment and add services, and the star climbs from Spark → Rising star → Shooting star → Supernova. They can share the result as a 1080×1920 story image, and their picks pre-fill the enquiry form.
-  ⚠️ The multipliers in `game.js` (`MOMENTS`, `BOOSTS`) are **example values**, and the game says so on screen. Replace them with averages from your own past campaigns before you promote the game.
-- **Easter egg:** type `wish` anywhere on the site for a meteor shower.
+- **A sky full of shooting stars:** every page has a steady stream of them, some silver and some in soft violet, sky-blue, rose or mint, plus a small meteor shower every 10–20 seconds. The stars drift slightly as you scroll. To tune it, change `nextMeteor` (how often) and `TINTS` (colours) in `site.js`.
+- **Catch a shooting star, anywhere:** click or tap a passing shooting star to catch it, and a counter appears. Catch 3 and a meteor shower plays, with a "Make a wish" card that leads to *Start a project*. A small hint tells first-time visitors they can try.
+- **Mini game, "Catch a shooting star"** (home page): 20 seconds to tap as many falling stars as possible. Each star is a moment you film (Haldi, Matchday, Store launch…), and a rare silver Supernova is worth 5. Quick catches build a combo. The visitor ends with a rank (Stargazer → Rising star → Shooting star → Supernova), can share a 1080×1920 story image of their score, and gets a "Book your moment" button. It remembers their best score, has optional sound, and works with touch, mouse or the keyboard (Space).
+- **Wedding constellation** (wedding shoots page only): each ceremony is a star. Tap one to play it, then swipe through the whole wedding.
+- **Small touches:** headlines shimmer softly, sparkles pop out of buttons on hover, cards tilt towards the mouse, a coloured stardust trail follows the cursor on desktop, a star travels down the edge of the page as you scroll, and the logo is "written" by a passing star once per visit.
+- **Easter egg:** type `wish` anywhere for a meteor shower.
 
 People who have turned on "reduce motion" on their device get a calm, still sky.
 
 ## 9. Logo and font
 
+- **Headlines** use **Bodoni Moda**, the logo's letterform. **Everything you read** (paragraphs, buttons, forms, menus) uses **Manrope**, which stays clear at small sizes. Both fonts are free (SIL Open Font Licence) and served from the site itself.
+- **Colours:** black and silver, with four soft accents used sparingly: violet for the fun bits, sky-blue for Marketing Labs, rose for Films and mint for Careers. They're defined at the top of `assets/css/site.css`.
+
 - `assets/brand/` holds the logo, redrawn as **vector outlines**: crisp at any size, 7 KB instead of a blurry 150 px picture. There are stacked and horizontal versions in white and black, a version with "MEDIA", a round Instagram avatar (`instagram-avatar-1080.png`), app icons, a favicon and the social share image (`og-image.jpg`).
-- The letters are drawn from **Bodoni Moda Black Italic**, the closest open-licence match to the existing Instagram logo. The whole site uses the same family. If you have the original logo file or font, send it over: the wordmark can be redrawn exactly with `tools/make_logo.py`, and the font swapped in with one line in `site.css`.
+- The logo letters are drawn from **Bodoni Moda Black Italic**, the closest open-licence match to the existing Instagram logo. If you have the original logo file or font, send it over: the wordmark can be redrawn exactly with `tools/make_logo.py`.
 
 ## 10. Before launch — checklist
 
@@ -158,16 +177,16 @@ People who have turned on "reduce motion" on their device get a calm, still sky.
 - [ ] Settings tab: team emails
 - [ ] Replace `YOUR-DOMAIN` in `robots.txt` and `sitemap.xml`
 - [ ] Fill in the bracketed details on `privacy.html`, and have it checked by your legal adviser
-- [ ] Reach Game: replace the example multipliers with your real numbers
+- [ ] Export your best reels (especially the six Instagram blocks) and add them as video files (section 6)
 - [ ] Labs example projects (`data.js` → `labWork`, `projects`) are marked as illustrative. Replace them with approved client work when you have it.
 - [ ] Send a test enquiry from a phone, then check the Sheet, the email and the admin
 
 ## 11. Tests
 
 ```bash
-npm run test:backend          # 37 checks of the backend rules, using a simulated Google environment
+npm run test:backend          # 41 checks of the backend rules, using a simulated Google environment
 npm install && npx playwright install chromium
-npm run serve & npm run test:site   # 34 checks of forms, live content, the game and admin
+npm run serve & npm run test:site   # 44 checks of forms, reels, the viewer, the game, the constellation and admin
 ```
 
-Reels are embedded from Instagram, so they need public posts. Collab posts work too. Some privacy browser extensions block Instagram embeds; those visitors see a "Watch on Instagram" button instead.
+Instagram reels need to be public; collab posts work too. Some privacy browser extensions block Instagram's player, which is another reason to use video files for your best reels.

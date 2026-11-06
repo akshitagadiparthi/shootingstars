@@ -98,10 +98,10 @@
       $('home-labs-chips').innerHTML = D.services.slice(0, 6).map((s) => `<a class="chip" href="service.html?s=${s.slug}">${esc(s.name)}</a>`).join('');
       $('home-films-chips').innerHTML = D.occasions.slice(0, 6).map((o) => `<a class="chip" href="shoot.html?t=${o.slug}">${esc(o.name)}</a>`).join('');
       SS.content().then((c) => {
-        SS.renderReelRail($('home-rail'), c.reels);
-        SS.renderConstellation($('home-constellation'), c.reels);
-        const hero = c.reels.find((r) => r.featured && r.visible !== false) || c.reels[0];
-        if (hero) SS.embed($('home-hero-reel'), hero);
+        const list = SS.renderReelRail($('home-rail'), c.reels);
+        SS.renderHeroReel($('home-hero-reel'), c.reels);
+        $('home-watch').addEventListener('click', () => SS.openStory(SS.visibleReels(c.reels), 0));
+        $('home-watch').hidden = !list.length;
       });
     },
     labs() {
@@ -115,7 +115,6 @@
       SS.content().then((c) => {
         packagesBlock($('films-packages'), c.packages);
         SS.renderReelWall($('films-reels'), c.reels);
-        SS.renderConstellation($('films-constellation'), c.reels);
       });
     },
     start() {
@@ -191,10 +190,13 @@
       $('sh-title').textContent = o.name;
       $('sh-intro').textContent = D.shootIntro[o.slug] || D.shootIntro._default;
       SS.$$('[data-sh-link]').forEach((a) => (a.href = 'enquiry.html?shoot=' + o.slug));
+      const weddings = o.slug === 'weddings-and-functions';
       SS.content().then((c) => {
-        const list = c.reels.filter((r) => r.category === o.reelCategory || (o.reelCategory === 'brand' && r.category === 'automotive'));
+        const list = SS.visibleReels(c.reels).filter((r) => r.category === o.reelCategory || (o.reelCategory === 'brand' && r.category === 'automotive'));
         if (list.length) SS.renderReelWall($('sh-reels'), list, { filters: false });
         else $('sh-reels-section').hidden = true;
+        // The wedding constellation lives on the wedding shoots page only.
+        if (weddings) { $('sh-constellation-section').hidden = false; SS.renderConstellation($('sh-constellation'), c.reels); }
       });
     },
     careers() {
