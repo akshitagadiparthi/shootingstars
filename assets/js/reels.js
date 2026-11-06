@@ -33,25 +33,43 @@
   const visible = (reels) => reels.filter(SS.playable).sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
   SS.visibleReels = visible;
 
-  /* ---------- Instagram frames report their height; size them to fit ---------- */
-  window.addEventListener('message', (e) => {
-    if (!/^https:\/\/www\.instagram\.com$/.test(e.origin)) return;
-    let d = e.data;
-    try { if (typeof d === 'string') d = JSON.parse(d); } catch (x) { return; }
-    if (!d || d.type !== 'MEASURE' || !d.details || !d.details.height) return;
-    SS.$$('iframe[data-ig]').forEach((f) => { if (f.contentWindow === e.source) { f.style.height = d.details.height + 'px'; f.style.minHeight = '0'; f.parentElement.style.minHeight = '0'; } });
-  });
-
+  /* ---------- Instagram's player, cropped to just the video ----------
+   * Instagram's frame = 54px header, then a 4:5 media box with the 9:16 reel
+   * centred in it, then likes/comments. We make the frame wider than the card
+   * and shift it so only the 9:16 picture shows: no white, no Instagram chrome.
+   * (Measured 6 Nov 2026; adjust HEADER / BOX if Instagram changes its layout.)
+   */
   function igFrame(r) {
     const f = document.createElement('iframe');
     f.src = embedUrl(r);
     f.dataset.ig = r.id;
-    f.title = (r.title || 'Reel') + ' — Shooting Stars on Instagram';
+    f.title = (r.title || 'Reel') + ' — Shooting Stars';
     f.loading = 'lazy';
     f.setAttribute('scrolling', 'no');
-    f.setAttribute('allowtransparency', 'true');
-    f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen; clipboard-write';
+    f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
     f.setAttribute('allowfullscreen', '');
+    return f;
+  }
+  const IG = { HEADER: 54, BOX: 1.25, PIC: 1.25 * 9 / 16 };
+  function fitCrop(box) {
+    const f = box.querySelector('iframe');
+    if (!f) return;
+    const C = box.clientWidth, H = box.clientHeight;
+    // cover the box: the 9:16 picture fills the width (or height if the box is wider than 9:16)
+    const picW = Math.max(C, H * 9 / 16);
+    const W = picW / IG.PIC;
+    f.style.width = W + 'px';
+    f.style.height = (IG.HEADER + W * IG.BOX + 60) + 'px';
+    f.style.left = (C - W) / 2 + 'px';
+    f.style.top = (H - W * IG.BOX) / 2 - IG.HEADER + 'px';
+  }
+  const cropRO = 'ResizeObserver' in window ? new ResizeObserver((es) => es.forEach((e) => fitCrop(e.target))) : null;
+  function igCrop(box, r) {
+    box.classList.add('ig-crop');
+    const f = igFrame(r);
+    box.append(f);
+    fitCrop(box);
+    if (cropRO) cropRO.observe(box); else window.addEventListener('resize', () => fitCrop(box));
     return f;
   }
 
@@ -78,10 +96,9 @@
     frame.classList.add('embed');
     const label = r.chapter || r.title || D.reelCategories[r.category] || 'Reel';
     frame.innerHTML = `<div class="reel-poster" aria-hidden="true"><span class="eyebrow">${SS.star} SHOOTING STARS FILMS</span><span class="t">${esc(label)}</span><span class="loading">Loading the reel…</span></div>`;
-    const f = igFrame(r);
     const p = frame.querySelector('.reel-poster');
-    f.addEventListener('load', () => { setTimeout(() => { p.style.opacity = '0'; setTimeout(() => p.remove(), 400); }, 250); }, { once: true });
-    frame.append(f);
+    const f = igCrop(frame, r);
+    f.addEventListener('load', () => { setTimeout(() => { p.style.opacity = '0'; setTimeout(() => p.remove(), 400); }, 600); }, { once: true });
   };
 
   // Only build players when the card comes near the screen.
@@ -194,7 +211,10 @@
         tick();
       } else {
         bars[i].querySelector('b').style.width = '100%';
-        stage.append(igFrame(r));
+        const box = document.createElement('div');
+        box.className = 'story-crop';
+        stage.append(box);
+        igCrop(box, r);
       }
     }
     function close() {
