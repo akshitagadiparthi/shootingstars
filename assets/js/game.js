@@ -177,7 +177,7 @@
       const f = floats[i]; f.y -= 0.9; f.life++;
       const a = 1 - f.life / 60;
       ctx.fillStyle = `rgba(${f.tint},${a})`;
-      ctx.font = `${f.big ? 800 : 700} ${f.big ? 22 : 16}px Manrope, system-ui, sans-serif`;
+      ctx.font = `${f.big ? 800 : 700} ${f.big ? 22 : 16}px Inter, system-ui, sans-serif`;
       ctx.fillText(f.text, f.x, f.y);
       if (f.life >= 60) floats.splice(i, 1);
     }
@@ -296,9 +296,9 @@
     });
     await document.fonts.ready;
     x.textAlign = 'center';
-    x.fillStyle = '#c3c9d3'; x.font = '700 36px Manrope, sans-serif'; x.fillText('I CAUGHT ' + (root.dataset.lastScore || 0) + ' POINTS OF STARS', 540, 820);
+    x.fillStyle = '#c3c9d3'; x.font = '700 36px Inter, sans-serif'; x.fillText('I CAUGHT ' + (root.dataset.lastScore || 0) + ' POINTS OF STARS', 540, 820);
     x.fillStyle = '#fff'; x.font = 'italic 900 150px "Bodoni Moda", serif'; x.fillText(root.dataset.lastRank || 'Stargazer', 540, 990);
-    x.fillStyle = '#c3c9d3'; x.font = '600 34px Manrope, sans-serif'; x.fillText('Can you catch more?', 540, 1080);
+    x.fillStyle = '#c3c9d3'; x.font = '600 34px Inter, sans-serif'; x.fillText('Can you catch more?', 540, 1080);
     const logo = new Image();
     logo.src = 'assets/brand/logo-stacked-white.svg';
     try { await logo.decode(); const w = 520, h = w * (logo.naturalHeight / logo.naturalWidth || 0.3); x.drawImage(logo, 540 - w / 2, 1460, w, h); } catch (e) { /* skip */ }

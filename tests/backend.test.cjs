@@ -13,6 +13,7 @@ function makeEnv(nowISO) {
   class Range {
     constructor(sh, r, c, nr, nc) { Object.assign(this, { sh, r, c, nr: nr || 1, nc: nc || 1 }); }
     setValues(v) { v.forEach((row, i) => row.forEach((x, j) => { const R = this.r + i - 1; while (this.sh.data.length <= R) this.sh.data.push([]); this.sh.data[R][this.c + j - 1] = x; })); return this; }
+    getValues() { return Array.from({ length: this.nr }, (_, i) => Array.from({ length: this.nc }, (_, j) => { const row = this.sh.data[this.r + i - 1] || []; const v = row[this.c + j - 1]; return v === undefined ? '' : v; })); }
     setValue(x) { return this.setValues([[x]]); }
     setFontWeight() { return this; } setBackground() { return this; } setFontColor() { return this; } setNumberFormat() { return this; }
     setDataValidation() { return this; } insertCheckboxes() { return this; } setWrap() { return this; } setNote() { return this; }
@@ -53,7 +54,7 @@ function makeEnv(nowISO) {
     LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
     MailApp: { sendEmail: (o) => mails.push(o) },
     Session: { getEffectiveUser: () => ({ getEmail: () => 'owner@example.com' }) },
-    ScriptApp: { getProjectTriggers: () => [], deleteTrigger() {}, newTrigger: () => ({ timeBased: () => ({ everyWeeks: () => ({ create() {} }) }) }) },
+    ScriptApp: { WeekDay: { MONDAY: 'MONDAY' }, getProjectTriggers: () => [], deleteTrigger() {}, newTrigger: () => ({ timeBased: () => ({ onWeekDay: () => ({ atHour: () => ({ create() {} }) }) }) }) },
     UrlFetchApp: { fetch: () => ({ getResponseCode: () => 500, getContentText: () => '' }) },
     ContentService: { createTextOutput: (s) => ({ s, setMimeType() { return this; } }), MimeType: { JSON: 'json' } }
   };

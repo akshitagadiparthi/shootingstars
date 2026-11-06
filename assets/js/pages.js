@@ -10,7 +10,7 @@
     const once = items.map((t) => `<span>${esc(t)} ${SS.star}</span>`).join('');
     return `<div class="track" aria-hidden="true">${once}${once}</div><span class="sr-only">${items.map(esc).join(', ')}</span>`;
   };
-  const artCard = (title, label, sub, href) => `<a class="card card-link reveal" href="${href}" style="padding:12px"><div class="art">${esc(title)}</div><div style="padding:8px 10px 10px"><h3 style="font-size:22px">${esc(label)}</h3><p class="small muted mt-s">${esc(sub)}</p></div></a>`;
+  const artCard = (theme, label, sub, href) => `<a class="card card-link reveal" href="${href}" style="padding:12px">${SS.ill(theme, label)}<div style="padding:8px 10px 10px"><h3 style="font-size:22px">${esc(label)}</h3><p class="small muted mt-s">${esc(sub)}</p></div></a>`;
 
   function setTitle(t) { document.title = t + ' · Shooting Stars Media'; }
   function notFound(el, what) { el.innerHTML = `<div class="wrap section"><h1 class="h1">That ${what} isn’t here.</h1><p class="lead mt-m">It may have moved.</p><div class="row mt-m"><a class="btn btn-primary" href="index.html">Back to home</a></div></div>`; }
@@ -23,13 +23,13 @@
     el.innerHTML = D.industries.map((s, i) => `<a class="card card-link reveal" href="industry.html?i=${s.slug}"><span class="eyebrow">Industry / ${String(i + 1).padStart(2, '0')}</span><h3>${esc(s.name)}</h3><p>${esc(s.intro)}</p><span class="arrow">Explore industry ↗</span></a>`).join('');
   }
   function occasionsGrid(el) {
-    el.innerHTML = D.occasions.map((o) => artCard(o.title, o.name, o.work + '. See packages or request a date.', 'shoot.html?t=' + o.slug)).join('');
+    el.innerHTML = D.occasions.map((o) => artCard(SS.illFor.occasion[o.slug] || 'camera', o.name, o.work + '.', 'shoot.html?t=' + o.slug)).join('');
   }
   function projectsList(el, filtersEl, initial) {
     const labels = { all: 'All Work', labs: 'Marketing Labs', films: 'Films', both: 'Integrated' };
     filtersEl.innerHTML = Object.entries(labels).map(([k, v]) => `<button class="chip" type="button" data-f="${k}" aria-pressed="${k === (initial || 'all')}">${v}</button>`).join('');
     const draw = (f) => {
-      el.innerHTML = D.projects.filter((p) => f === 'all' || p.type === f).map((p) => `<a class="card card-link reveal" href="project.html?p=${p.slug}"><div class="art" style="min-height:160px">${esc(p.title.toUpperCase())}</div><span class="eyebrow">${esc(p.industry)} / ${p.type.toUpperCase()}</span><h3>${esc(p.title)}</h3><p>${esc(p.desc)}</p><span class="arrow">Explore project ↗</span></a>`).join('');
+      el.innerHTML = D.projects.filter((p) => f === 'all' || p.type === f).map((p) => `<a class="card card-link reveal" href="project.html?p=${p.slug}">${SS.ill(SS.illFor.project[p.slug] || 'rocket', p.title)}<span class="eyebrow">${esc(p.industry)} · ${{ labs: 'Marketing Labs', films: 'Films', both: 'Labs + Films' }[p.type]}</span><h3>${esc(p.title)}</h3><p>${esc(p.desc)}</p><span class="arrow">Explore project ↗</span></a>`).join('');
       SS.reveal(el);
     };
     filtersEl.addEventListener('click', (e) => {
@@ -45,7 +45,7 @@
     const draw = (g) => {
       el.innerHTML = D.labWork.filter((w) => g === 'all' || w.group === g).map((w) => {
         const svc = D.services.find((s) => s.name === w.service);
-        return `<a class="card card-link reveal" href="service.html?s=${svc ? svc.slug : ''}" style="padding:12px"><div class="art">${esc(w.title)}</div><div style="padding:8px 10px 10px"><h3 style="font-size:22px">${esc(w.work)} ↗</h3><p class="small muted mt-s">${esc(w.client)} · Example case study</p></div></a>`;
+        return `<a class="card card-link reveal" href="service.html?s=${svc ? svc.slug : ''}" style="padding:12px">${SS.ill(SS.illFor.service[w.service] || 'pen', w.service)}<div style="padding:8px 10px 10px"><span class="eyebrow">${esc(w.service)}</span><h3 style="font-size:22px;margin-top:8px">${esc(w.work)} ↗</h3><p class="small muted mt-s">${esc(w.client)} · Example case study</p></div></a>`;
       }).join('');
       SS.reveal(el);
     };
@@ -176,7 +176,7 @@
       $('prj-type').textContent = p.type.toUpperCase() + ' / EXAMPLE PROJECT';
       $('prj-title').textContent = p.title;
       $('prj-lead').textContent = p.industry + ' · ' + p.desc;
-      $('prj-art').textContent = p.title.toUpperCase();
+      $('prj-art').outerHTML = SS.ill(SS.illFor.project[p.slug] || 'rocket', p.title).replace('class="ill"', 'class="ill wide"');
       $('prj-lab').textContent = p.type === 'films' ? 'Not included in this illustrative Films-only project.' : 'Creative strategy, messaging, channels and campaign planning as relevant to the brief.';
       $('prj-film').textContent = p.type === 'labs' ? 'Production only if included in the agreed scope.' : 'Shoot planning, capture and editing in the agreed Instant or Professional format.';
       $('prj-tags').innerHTML = p.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join(' ');

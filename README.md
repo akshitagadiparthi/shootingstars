@@ -37,7 +37,7 @@ assets/js/game.js     Mini game: "Catch a shooting star"
 assets/js/forms.js    All four forms
 assets/js/pages.js    Page-specific rendering
 assets/css/site.css   All styles
-assets/fonts/         Bodoni Moda (headlines) + Manrope (text), self-hosted, SIL Open Font Licence
+assets/fonts/         Bodoni Moda (headlines) + Inter (text), self-hosted, SIL Open Font Licence
 assets/reels/         Put your reel video files here (see section 6)
 assets/brand/         The rebuilt logo, icons, Instagram avatar, share image
 
@@ -165,7 +165,7 @@ People who have turned on "reduce motion" on their device get a calm, still sky.
 
 ## 9. Logo and font
 
-- **Headlines** use **Bodoni Moda**, the logo's letterform. **Everything you read** (paragraphs, buttons, forms, menus) uses **Manrope**, which stays clear at small sizes. Both fonts are free (SIL Open Font Licence) and served from the site itself.
+- **Headlines** use **Bodoni Moda**, the logo's letterform. **Everything you read** (paragraphs, buttons, forms, menus) uses **Inter**, which stays clear at small sizes. Both fonts are free (SIL Open Font Licence) and served from the site itself.
 - **Colours:** black and silver, with four soft accents used sparingly: violet for the fun bits, sky-blue for Marketing Labs, rose for Films and mint for Careers. They're defined at the top of `assets/css/site.css`.
 
 - `assets/brand/` holds the logo, redrawn as **vector outlines**: crisp at any size, 7 KB instead of a blurry 150 px picture. There are stacked and horizontal versions in white and black, a version with "MEDIA", a round Instagram avatar (`instagram-avatar-1080.png`), app icons, a favicon and the social share image (`og-image.jpg`).

@@ -496,7 +496,7 @@ function handleAdmin_(body) {
       var r = Number(body.row);
       if (r < 2 || r > sh2.getLastRow()) throw userError_('Row not found');
       sh2.getRange(r, 1, 1, vals.length).setValues([vals]);
-    } else sh2.appendRow(vals);
+    } else sh2.getRange(firstEmptyRow_(sh2), 1, 1, vals.length).setValues([vals]);
     clearContentCache_();
     return { ok: true };
   }
@@ -608,6 +608,12 @@ function newKey_() {
 }
 
 /** Creates the tabs, headers, formatting, dropdowns and starter content. Safe to run again. */
+// Checkbox columns fill every row with FALSE, so find the real end of the data from column A.
+function firstEmptyRow_(sh) {
+  var a = sh.getRange(1, 1, Math.max(sh.getLastRow(), 1), 1).getValues();
+  for (var i = a.length - 1; i >= 0; i--) if (a[i][0] !== '' && a[i][0] !== null) return i + 2;
+  return 2;
+}
 function setup() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   ss.setSpreadsheetTimeZone(TZ);
@@ -656,9 +662,9 @@ function setup() {
   pk.getRange('I2:J').insertCheckboxes();
   pk.getRange('H2:H').setWrap(true);
 
-  if (reels.getLastRow() < 2) seedReels_(reels);
-  if (jobs.getLastRow() < 2) seedJobs_(jobs);
-  if (pk.getLastRow() < 2) seedPackages_(pk);
+  if (firstEmptyRow_(reels) === 2) seedReels_(reels);
+  if (firstEmptyRow_(jobs) === 2) seedJobs_(jobs);
+  if (firstEmptyRow_(pk) === 2) seedPackages_(pk);
   var st = ss.getSheetByName(TAB.SETTINGS);
   if (st.getLastRow() < 2) st.getRange(2, 1, DEFAULT_SETTINGS.length, 3).setValues(DEFAULT_SETTINGS);
   st.setColumnWidth(3, 520);
@@ -672,7 +678,7 @@ function setup() {
 
 function installTriggers_() {
   ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'refreshInstagramToken') ScriptApp.deleteTrigger(t); });
-  ScriptApp.newTrigger('refreshInstagramToken').timeBased().everyWeeks(1).create();
+  ScriptApp.newTrigger('refreshInstagramToken').timeBased().onWeekDay(ScriptApp.WeekDay.MONDAY).atHour(4).create();
 }
 
 // Reels Instagram would not play outside its app when checked on 6 Nov 2026.

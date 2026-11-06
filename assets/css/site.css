@@ -1,23 +1,22 @@
 /* Shooting Stars Media — site styles
    Black night sky, silver light, a few soft colours.
-   Headlines: Bodoni Moda (the logo's letterform). Everything you read: Manrope. */
+   Headlines: Bodoni Moda (the logo's letterform). Everything you read: Inter. */
 
 @font-face { font-family: 'Bodoni Moda'; src: url('../fonts/bodoni-moda-latin-standard-normal.woff2') format('woff2'); font-weight: 400 900; font-style: normal; font-display: swap; }
 @font-face { font-family: 'Bodoni Moda'; src: url('../fonts/bodoni-moda-latin-standard-italic.woff2') format('woff2'); font-weight: 400 900; font-style: italic; font-display: swap; }
-@font-face { font-family: 'Manrope'; src: url('../fonts/manrope-latin-wght-normal.woff2') format('woff2'); font-weight: 200 800; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url('../fonts/inter-latin-wght-normal.woff2') format('woff2'); font-weight: 100 900; font-style: normal; font-display: swap; }
 
 :root {
   --bg: #000000;
-  --surface: rgba(16, 13, 38, .72);
-  --surface-2: rgba(24, 19, 52, .9);
-  --surface-3: #241c4a;
-  --line: rgba(255, 255, 255, .10);
-  --line-2: rgba(255, 255, 255, .22);
-  --dusk: linear-gradient(180deg, #0c0e2c 0%, #191848 28%, #2f1d58 52%, #57265f 72%, #8f3866 86%, #d1586a 95%, #f2925e 100%);
+  --surface: rgba(20, 21, 30, .78);
+  --surface-2: rgba(26, 27, 38, .94);
+  --surface-3: #22232f;
+  --line: rgba(255, 255, 255, .09);
+  --line-2: rgba(255, 255, 255, .2);
   --text: #eef0f4;
-  --body: #d9dce3;
-  --muted: #b6bbc6;
-  --faint: #8d929d;
+  --body: #eceef3;
+  --muted: #cfd3db;
+  --faint: #aeb3be;
   --silver: #e2e6ec;
   --silver-2: #c3c9d3;
   /* a few soft colours, used sparingly */
@@ -33,18 +32,18 @@
   --gutter: clamp(16px, 4.5vw, 64px);
   --max: 1320px;
   --display: 'Bodoni Moda', 'Didot', 'Bodoni 72', 'Times New Roman', serif;
-  --sans: 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --ease: cubic-bezier(.2, .8, .2, 1);
   --accent: var(--silver);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { background: #191848; color-scheme: dark; -webkit-text-size-adjust: 100%; }
-/* sunset sky: deep indigo overhead, warm glow on the horizon */
-body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(120% 45% at 50% 108%, rgba(255,170,110,.55), transparent 60%), var(--dusk); }
+html { background: #08090e; color-scheme: dark; -webkit-text-size-adjust: 100%; }
+/* night sky, lifted: soft moonlight glow at the top so it never feels like a black screen */
+body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(70% 55% at 75% -8%, rgba(150,140,230,.20), transparent 62%), radial-gradient(55% 45% at 5% 0%, rgba(110,170,230,.12), transparent 60%), radial-gradient(80% 40% at 50% 115%, rgba(120,110,200,.10), transparent 60%), linear-gradient(180deg, #10121c 0%, #0a0b12 55%, #08090e 100%); }
 body {
   margin: 0; background: transparent; color: var(--body);
-  font-family: var(--sans); font-size: 17px; line-height: 1.65; font-weight: 400;
+  font-family: var(--sans); font-size: 17.5px; line-height: 1.7; font-weight: 450; letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; overflow-x: hidden;
 }
 img, svg, video, iframe { max-width: 100%; }
@@ -167,7 +166,7 @@ main { position: relative; z-index: 1; }
 }
 
 /* ---------- header ---------- */
-.site-header { position: sticky; top: 0; z-index: 60; background: rgba(14,13,40,.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid rgba(255,255,255,.06); }
+.site-header { position: sticky; top: 0; z-index: 60; background: rgba(10,11,18,.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid rgba(255,255,255,.06); }
 .site-header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 76px; }
 .brand { position: relative; flex: none; overflow: hidden; display: inline-flex; align-items: center; gap: 12px; text-decoration: none; }
 .brand img { height: 28px; width: auto; max-width: min(62vw, 300px); object-fit: contain; object-position: left center; }
@@ -178,7 +177,7 @@ main { position: relative; z-index: 1; }
 .menu-btn { display: none; width: 46px; height: 46px; border-radius: 999px; border: 1px solid var(--line-2); background: transparent; cursor: pointer; align-items: center; justify-content: center; }
 .menu-btn span, .menu-btn span::before, .menu-btn span::after { display: block; width: 18px; height: 1.5px; background: #fff; position: relative; content: ""; }
 .menu-btn span::before { position: absolute; top: -6px; } .menu-btn span::after { position: absolute; top: 6px; }
-.mobile-menu { position: fixed; inset: 0; z-index: 90; background: #14123a; padding: 24px var(--gutter) 40px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
+.mobile-menu { position: fixed; inset: 0; z-index: 90; background: #0b0c14; padding: 24px var(--gutter) 40px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
 .mobile-menu .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
 .mobile-menu a.big { font-family: var(--display); font-size: clamp(34px, 9vw, 52px); font-weight: 800; font-style: italic; text-decoration: none; line-height: 1.15; color: var(--text); }
 .mobile-menu .minor { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 22px; }
@@ -421,3 +420,18 @@ details.faq p { margin-top: 12px; color: var(--body); max-width: 760px; }
 .prose h2 { font-size: 28px; margin: 36px 0 12px; }
 .prose p, .prose li { color: var(--body); }
 .prose p + p { margin-top: 12px; }
+
+/* ---------- illustrations (replace text placeholders on cards) ---------- */
+.ill { position: relative; overflow: hidden; border-radius: var(--radius-sm); border: 1px solid var(--line); aspect-ratio: 16 / 10; background: radial-gradient(90% 90% at 78% 22%, color-mix(in srgb, var(--t, #a996ff) 38%, transparent), transparent 62%), radial-gradient(70% 70% at 10% 100%, color-mix(in srgb, var(--t2, #7ccbff) 22%, transparent), transparent 60%), #0f1019; }
+.ill svg.icon { position: absolute; right: 9%; top: 50%; width: 46%; height: 70%; transform: translateY(-50%); fill: none; stroke: #f1f3f8; stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 18px color-mix(in srgb, var(--t, #a996ff) 70%, transparent)); }
+.ill i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff; opacity: .7; }
+.ill b { position: absolute; left: 8%; top: 18%; width: 34%; height: 1.5px; transform: rotate(-24deg); transform-origin: left; background: linear-gradient(90deg, #fff, transparent); opacity: .8; }
+.ill b::before { content: ""; position: absolute; left: -3px; top: -2.5px; width: 6px; height: 6px; border-radius: 50%; background: #fff; box-shadow: 0 0 10px 3px color-mix(in srgb, var(--t, #a996ff) 80%, transparent); }
+.card-link:hover .ill svg.icon { transform: translateY(-50%) scale(1.04); transition: transform .4s var(--ease); }
+.ill.wide { aspect-ratio: 21 / 9; }
+
+/* legibility: small headings in the clean sans; the logo serif stays for big headlines */
+h3, .h3, .card h3, .reel-card header strong, .mode strong, details.faq summary, .cstar span, .story .top strong { font-family: var(--sans); font-style: normal; font-weight: 700; letter-spacing: -0.01em; }
+.lead { color: #f1f2f6; font-weight: 450; }
+.note { font-size: 14.5px; }
+.chip, .tag, .eyebrow { font-weight: 700; }

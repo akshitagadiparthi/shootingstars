@@ -29,7 +29,7 @@ async function route(ctx) {
   await ctx.route('**/test-media/reel.jpg', (r) => r.fulfill({ path: MEDIA + '/raw.jpg', headers: { 'content-type': 'image/jpeg' } }));
   await ctx.route('**/assets/js/config.js', async (r) => {
     const res = await r.fetch();
-    const body = (await res.text()).replace("API_URL: ''", `API_URL: '${API}'`);
+    const body = (await res.text()).replace(/API_URL: '[^']*'/, `API_URL: '${API}'`);
     r.fulfill({ response: res, body, headers: { 'content-type': 'application/javascript' } });
   });
   await ctx.route(API + '**', async (r) => {
@@ -204,6 +204,10 @@ const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0
   console.log('Not connected');
   const ctx2 = await b.newContext();
   await ctx2.route(/instagram\.com/, (r) => r.abort());
+  await ctx2.route('**/assets/js/config.js', async (r) => {
+    const res = await r.fetch();
+    r.fulfill({ response: res, body: (await res.text()).replace(/API_URL: '[^']*'/, "API_URL: ''") });
+  });
   const p2 = await ctx2.newPage();
   await p2.goto(BASE + 'apply.html');
   await p2.fill('[name=name]', 'X'); await p2.fill('[name=email]', 'x@example.com'); await p2.selectOption('[name=role]', 'Video Editor');

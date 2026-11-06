@@ -9,7 +9,7 @@
  * EMAIL     Public enquiries address shown on Contact and used as a fallback.
  */
 window.SS_CONFIG = {
-  API_URL: '',
+  API_URL: 'https://script.google.com/macros/s/AKfycby7Z5wXNlRXPAhnOtiqM_Pd0w0Q0BaTpTzPhWzUjFV3yC680aqfsvCJnjWRwZ9k9iYzEQ/exec',
   WHATSAPP: '',
   EMAIL: '',
   INSTAGRAM_FILMS: 'https://www.instagram.com/shootingstars_films/',
